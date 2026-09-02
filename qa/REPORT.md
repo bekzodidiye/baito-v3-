@@ -41,10 +41,11 @@ accessible names and focus order; concurrency and load on read paths.
   testing against it is forbidden by §2 regardless. Nothing here is confirmed
   against production.
 - **Payment and SMS providers.** No sandbox credentials; contract shape only.
-- **7 of 59 screens** — named individually in `ui-sweep.md`.
+- **Colour contrast** and a real screen reader — see below.
 - **Cross-browser and real devices.** Chromium only.
 - **Colour contrast, and a real screen reader.** Accessible names and tab order
   were checked programmatically; that is roughly a third of what an audit needs.
+  One control is still unnamed: the password-visibility toggle on `/login`.
 
 **Blocked.** Nothing. Every §19 precondition was met: the app runs, credentials
 exist for all three roles, the browser tooling reads console and network.
@@ -58,6 +59,7 @@ exist for all three roles, the browser tooling reads console and network.
 | BUG-003 | S3 | P2 | security | frontend deps | 5 high-severity advisories in the production bundle | **Fixed + CI gate** |
 | BUG-004 | S3 | P2 | process | `ci.yml` | Lint gate cannot fail; E2E suite never runs; no frontend unit tests | **Partly fixed** — gates real; E2E blocked on BUG-005 |
 | BUG-005 | S3 | P2 | process | `frontend/tests/` | All 5 Playwright specs assert a login flow the app does not use | Open — needs an owner decision |
+| BUG-006 | S3 | P2 | functional | `PaymentResult.tsx` | Payment result screens render Russian to an English interface | Open |
 | OBS-01 | S4 | P4 | data | `transportRate` | Accepts `-50000`; traced — free-text display field, never parsed into money | Observation |
 | OBS-02 | — | — | design | `POST /jobs` | Duplicate submits create two postings; an `Idempotency-Key` mechanism exists but only payments use it | Observation |
 
@@ -65,10 +67,10 @@ exist for all three roles, the browser tooling reads console and network.
 
 | Area | Cases | Pass | Fail | Blocked | Coverage / score |
 |---|---|---|---|---|---|
-| Functional (backend suite) | 104 | 104 | 0 | 0 | 69% line coverage |
+| Functional (backend suite) | 108 | 108 | 0 | 0 | 69% line coverage |
 | API | 94 endpoints enumerated | see below | 1 | 0 | auth/authz swept across all; per-endpoint happy paths partial |
 | Data | escrow, balances, applications | pass | 0 | 0 | escrow_service 93% |
-| **UI sweep** | 52 screens · 1,423 elements | 52 | 0 | 0 | 88.1% of screens; breadth crawl, not per-element clicks |
+| **UI sweep** | 59 screens · 1,513 elements | 57 | 2 | 0 | **100% of screens**; breadth crawl, not per-element clicks |
 | AI eval | — | — | — | — | **N/A — no model** |
 | Security | 12 systematic checks | 12 | 0 | 0 | BUG-003 closed |
 | Performance | 3 load profiles | 3 | 0 | 0 | 1,000 req @200 concurrent, all 200 OK |
@@ -77,17 +79,24 @@ exist for all three roles, the browser tooling reads console and network.
 
 ## 4b. UI sweep coverage
 
-Screens in inventory: **59** · visited: **52 (88.1%)**
-Interactive elements observed: **1,423** · crashes 0 · console errors 0 ·
+Screens in inventory: **59** · visited: **59 (100%)**
+Interactive elements observed: **1,513** · crashes 0 · console errors 0 ·
 failed requests 0 · horizontal overflow 0
 Roles swept: worker · employer · admin · guest (via login/register)
 Mode: **automated crawl at 100% of reachable routes + targeted deep pass** on
 money, permission, deep-link and destructive paths. A hand-click of all 1,423
 controls was **not** performed and is not claimed.
 
-Not visited, each with a reason: `/jobs/:id`, `/chats/:id`, `/payments/success`,
-`/payments/error`, `*`, and the two auth screens swept only as far as
-authenticating. Full list in `ui-sweep.md`.
+The seven that stood open — `/jobs/:id`, `/chats/:id`, `/payments/success`,
+`/payments/error`, `*`, `/login`, `/register` — were swept in a follow-up pass
+and are now accounted for, which closes the §15 UI criterion. Two of them
+failed: **BUG-006**. That is the argument for the criterion. The earlier locale
+fix could not reach a screen nobody had opened, and the defect sat on the one
+screen whose whole job is telling a user whether their money arrived.
+
+What remains is depth, not reach: 1,513 controls were enumerated and their
+screens verified; each was not individually clicked. Money, permission,
+deep-link and destructive paths were deep-passed.
 
 ## 5. AI quality scorecard
 
@@ -113,7 +122,9 @@ Full register: `risk-register.md`.
 Not passing: CUJ-1 (PARTIAL — SMS code path needs a provider sandbox),
 input validation (FAIL — BUG-002), dependency hygiene (FAIL — BUG-003),
 CI gates (FAIL — BUG-004), a11y (PARTIAL).
-Backend line coverage **69%**, measured this pass; no prior value exists and no
+Backend line coverage **69%**, re-measured after the fixes (4,116 statements,
+1,274 missed). `app/tasks.py` moved 19% → 28% — the BUG-001 test is the whole of
+that gain, and it remains the least-covered money path in the product. No
 threshold is configured in CI.
 
 ## 8. Conditions for GO
@@ -143,8 +154,10 @@ instruction. What follows is their state as of this revision.
 
 ## 9. Recommendations (beyond this release)
 
-- **Treat `app/tasks.py` as a P0 coverage area.** It is 19% covered and holds
-  the only money movement that happens without a human. BUG-001 lived there.
+- **Treat `app/tasks.py` as a P0 coverage area.** It is 28% covered — up from
+  19%, and all of that gain is the one test written for BUG-001 — and it holds
+  the only money movement that happens without a human. `expire_stale_jobs` and
+  `send_telegram_digest` are still untested.
 - **Add a frontend test layer.** There are zero unit tests. Every frontend
   defect in this session was found by hand, which does not scale and does not
   survive this session ending.
@@ -161,13 +174,14 @@ instruction. What follows is their state as of this revision.
 - `test-plan.md` · `risk-register.md` · `rtm.csv`
 - `ui-inventory.md` (59 screens) · `ui-sweep.md` (52 visited, 1,423 elements)
 - `api-checklist.md` (94 endpoints)
-- `findings/BUG-001…BUG-005`
+- `findings/BUG-001…BUG-006`
 - `sessions/SES-01-ugly-data.md` · `sessions/SES-02-permissions-and-interruption.md`
 - `perf/results.md`
 - `security/llm-top10.md` (N/A, with basis) · `security/scans/` (ruff, pip-audit,
   npm-audit, secret sweeps — raw output)
 - `evidence/baseline-pytest.txt` · `evidence/coverage.txt` ·
-  `evidence/regression-after-fix.txt`
+  `evidence/regression-after-fix.txt` ·
+  `evidence/regression-after-open-findings.txt` · `evidence/coverage-after-fixes.txt`
 - `rca.md` · `metrics.md`
 - `history/` — empty; this is run 1.
 

@@ -85,20 +85,41 @@ Admin elements observed: **737**
 
 ## Coverage
 
-Screens in inventory: **59** · visited: **52** (88.1%)
-Interactive elements observed across visited screens: **1423**
+Screens in inventory: **59** · visited: **59** (100%)
+Interactive elements observed across visited screens: **1513**
 Roles swept: worker · employer · admin · (guest, via the login and register screens)
+
+The last seven were swept in a follow-up pass to meet §15's "100% of the §9.1
+inventory accounted for". They needed seeded data rather than new access: a job
+and a chat were created through the API so the two parameterised routes had a
+real id to resolve.
+
+| Screen | Controls | Console | Network | Overflow | Result |
+|---|---|---|---|---|---|
+| `/login` | 7 | clean | clean | none | **PASS** — 1 control still unnamed (the password-visibility toggle) |
+| `/register` | 6 | clean | clean | none | **PASS** — 0 unnamed |
+| `*` (catch-all) | 2 | clean | clean | none | **PASS** — renders a real 404 with a way back |
+| `/jobs/:id` | 27 | clean | clean | none | **PASS** — deep link resolves, the seeded posting renders |
+| `/chats/:id` | 18 | clean | clean | none | **PASS** — deep link resolves, the seeded message renders |
+| `/payments/success` | 15 | clean | clean | none | **FAIL** — BUG-006 |
+| `/payments/error` | 15 | clean | clean | none | **FAIL** — BUG-006 |
+
+Follow-up elements observed: **90**. One defect found: **BUG-006**, Russian
+rendered to an English interface on both payment result screens — which is
+precisely why the seven mattered. The earlier locale fix could not reach a
+screen nobody had opened.
+
+Checked and **not** a defect: the login screen's "Orqaga" button carries
+`type="submit"`, but it sits outside the form, so it submits nothing. Recorded
+so the next reader does not re-open it.
 
 ## Not exercised — named, not omitted (§9.1)
 
+The seven screens that stood here are now swept; see the table above. What
+remains is one limit, and it is a limit of depth rather than of reach.
+
 | Item | Why |
 |---|---|
-| `/jobs/:id` | Parameterised detail route. The same component backs `/jobs`; the detail panel was exercised there, but the deep-linked URL form was not crawled. |
-| `/chats/:id` | As above — the chat pane was exercised from `/messages`. |
-| `/payments/success` | Reached only by a real payment provider redirect; no sandbox credentials in this environment. |
-| `/payments/error` | Same. |
-| `*` (catch-all) | Not crawled. |
-| `/login`, `/register` | Visited and used to authenticate each role, but not swept element-by-element. |
 | Individual control clicks | 1,423 controls were enumerated and their screens verified; each control was **not** individually clicked in this pass. The money, permission, deep-link and destructive paths were deep-passed; the rest is breadth only. |
 
 ## State variants reached

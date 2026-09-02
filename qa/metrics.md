@@ -9,20 +9,23 @@ trend is established from the next pass onward. Sample sizes are stated.
 | Run | Date | Commit | Backend tests | Coverage | Findings (S1/S2/S3/S4) | UI screens visited | Verdict |
 |---|---|---|---|---|---|---|---|
 | 1 | 2026-09-02 | `00c34cc` | 104 passed / 104 | 69% | 0 / 1 / 3 / 1 | 52 of 59 | GO WITH CONDITIONS |
-| 1b | 2026-09-02 | `db4d78e` | see below | not re-measured | 0 / 1 / 4 / 1 | — | GO WITH CONDITIONS (narrowed) |
+| 1b | 2026-09-02 | `1b45307` | 108 passed / 108 | 69% | 0 / 1 / 5 / 1 | 59 of 59 | GO WITH CONDITIONS (narrowed) |
 
 Run **1b** is the same pass, after the owner asked for the three open findings
-to be fixed. It is not a second run: no new testing was performed beyond
-verifying the fixes, and coverage was not re-measured. BUG-005 is new, and was
-found only because fixing BUG-004 meant running the E2E specs for the first time.
+to be fixed, plus the follow-up that closed the UI sweep to 100%. Coverage
+**was** re-measured at the end. Two findings are new and neither came from new
+testing scope: BUG-005 because fixing BUG-004 meant running the E2E specs for
+the first time, and BUG-006 because closing the sweep meant opening two screens
+nobody had opened.
 
 ## This run in detail
 
 | Metric | Previous | This run | Sample | Note |
 |---|---|---|---|---|
-| Backend suite | 103 passed | **104 passed, 0 failed** | 104 cases | +1: the preventive test for BUG-001 |
-| Line coverage (backend) | — (never measured) | **69%** | 4,106 statements, 1,271 missed | measured with `pytest-cov`; no threshold exists in CI |
-| Coverage, `app/tasks.py` | — | **19%** | 157 statements | the only unattended money movement in the product |
+| Backend suite | 103 passed | **108 passed, 0 failed** | 108 cases | +1 for BUG-001, +4 for BUG-002 |
+| Line coverage (backend) | 69% (run 1) | **69%** | 4,116 statements, 1,274 missed | re-measured after the fixes; no threshold exists in CI |
+| Coverage, `app/tasks.py` | 19% (run 1) | **28%** | 157 statements | the BUG-001 test reached 9 points of it; still the least-covered money path |
+| Coverage, `app/schemas/job.py` | — | **93%** | 129 statements | after the BUG-002 validator and its four tests |
 | Coverage, `app/services/escrow_service.py` | — | **93%** | — | |
 | Coverage, `app/core/security.py` | — | **90%** | — | |
 | Frontend unit tests | — | **0** | — | none exist |
@@ -33,8 +36,9 @@ found only because fixing BUG-004 meant running the E2E specs for the first time
 | Dependency advisories (backend) | — | **1** | `ecdsa` via `python-jose` | unreachable: JWTs are HS256 |
 | Secrets in worktree / git history | — | **0 / 0** | full tree, all refs | regex sweep |
 | Requirements coverage (P0/P1) | — | **22 of 22 traced** | see `rtm.csv` | 2 PARTIAL, 3 FAIL, rest PASS |
-| UI screens visited | — | **52 of 59 (88.1%)** | inventory in `ui-inventory.md` | 7 named as not visited |
-| UI elements observed | — | **1,423** | across 52 screens | breadth crawl; not each individually clicked |
+| UI screens visited | — | **59 of 59 (100%)** | inventory in `ui-inventory.md` | was 52; the last 7 swept in a follow-up pass |
+| UI elements observed | — | **1,513** | across 59 screens | breadth crawl; not each individually clicked |
+| Defects found by the last 7 screens | — | **1** | 90 elements | BUG-006 — the case for the 100% criterion |
 | Unnamed interactive controls | 6 (earlier today) | **2** | 14 routes | |
 | Undersized touch targets @375px | 60+ (earlier today) | **11** | 9 routes | remaining are wide filter chips |
 | Flake rate | — | **0%** observed | 104 cases, 3 full runs today | one ordering flake was found and fixed earlier today |
