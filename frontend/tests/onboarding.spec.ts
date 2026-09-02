@@ -16,9 +16,9 @@ import { test, expect, Page } from '@playwright/test';
  */
 
 const LABELS = {
-  uz: { next: 'Keyingisi', start: 'Boshlash', skip: "O'tkazib yuborish", first: 'Xarita orqali ish qidiring' },
-  ru: { next: 'Далее', start: 'Начать', skip: 'Пропустить', first: 'Ищите работу на карте' },
-  en: { next: 'Next', start: 'Start', skip: 'Skip', first: 'Find jobs on the map' },
+  uz: { next: 'Keyingisi', start: 'Boshlash', skip: "O'tkazib yuborish", close: 'Yopish', first: 'Xarita orqali ish qidiring' },
+  ru: { next: 'Далее', start: 'Начать', skip: 'Пропустить', close: 'Закрыть', first: 'Ищите работу на карте' },
+  en: { next: 'Next', start: 'Start', skip: 'Skip', close: 'Close', first: 'Find jobs on the map' },
 } as const;
 
 /** The dialog, found by something only it contains rather than by its classes. */
@@ -103,20 +103,15 @@ test.describe('Onboarding tour', () => {
     await expect(tourOf(page)).toHaveCount(0);
   });
 
-  // BUG-007: the ✕ in the corner is painted but never reachable — it and the
-  // content block share z-index 10 and the content comes later in the DOM, so
-  // it wins the hit test. A real click at the button's own centre leaves the
-  // tour open. Marked fixme rather than deleted: it reports as a known gap on
-  // every run and starts passing the moment the control works. It is also the
-  // only button in the dialog with no text, because it has no accessible name
-  // either — when that is fixed, find it by role and name instead.
-  test.fixme('the close control in the corner also dismisses it', async ({ page }) => {
+  // BUG-007. This was `test.fixme` when it was written: the ✕ was painted but
+  // never reachable, because it and the content block shared z-index 10 and the
+  // content comes later in the DOM. Now it is found by its accessible name,
+  // which it also did not have, and clicked like any other control.
+  test('the close control in the corner also dismisses it', async ({ page }) => {
     await page.goto('/');
     const tour = tourOf(page);
 
-    const close = tour.locator('button').filter({ hasText: /^$/ });
-    await expect(close).toHaveCount(1);
-    await close.click();
+    await tour.getByRole('button', { name: 'Yopish', exact: true }).click();
 
     await expect(tour).toHaveCount(0);
     expect(await page.evaluate(() => localStorage.getItem('baito_has_seen_tour'))).toBe('true');
@@ -154,6 +149,8 @@ test.describe('Onboarding tour', () => {
       await expect(tour).toBeVisible();
       await expect(tour.getByRole('heading', { level: 2 })).toHaveText(LABELS[lang].first);
       await expect(tour.getByRole('button', { name: LABELS[lang].next, exact: true })).toBeVisible();
+      // The close control is named too, and named in the same language.
+      await expect(tour.getByRole('button', { name: LABELS[lang].close, exact: true })).toBeVisible();
     });
   }
 });
