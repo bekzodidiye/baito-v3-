@@ -9,6 +9,12 @@ trend is established from the next pass onward. Sample sizes are stated.
 | Run | Date | Commit | Backend tests | Coverage | Findings (S1/S2/S3/S4) | UI screens visited | Verdict |
 |---|---|---|---|---|---|---|---|
 | 1 | 2026-09-02 | `00c34cc` | 104 passed / 104 | 69% | 0 / 1 / 3 / 1 | 52 of 59 | GO WITH CONDITIONS |
+| 1b | 2026-09-02 | `db4d78e` | see below | not re-measured | 0 / 1 / 4 / 1 | — | GO WITH CONDITIONS (narrowed) |
+
+Run **1b** is the same pass, after the owner asked for the three open findings
+to be fixed. It is not a second run: no new testing was performed beyond
+verifying the fixes, and coverage was not re-measured. BUG-005 is new, and was
+found only because fixing BUG-004 meant running the E2E specs for the first time.
 
 ## This run in detail
 
@@ -20,9 +26,10 @@ trend is established from the next pass onward. Sample sizes are stated.
 | Coverage, `app/services/escrow_service.py` | — | **93%** | — | |
 | Coverage, `app/core/security.py` | — | **90%** | — | |
 | Frontend unit tests | — | **0** | — | none exist |
-| E2E specs that run in CI | — | **0 of 5** | 5 specs present | never invoked |
-| Lint findings, `app/` | — | **110** | 109 F401, 1 E712 | gate is `\|\| true`, so none block |
-| Dependency advisories (prod) | — | **5 high** | frontend runtime deps | `npm audit --omit=dev` |
+| E2E specs that run in CI | — | **0 of 5** | 5 specs present | runnable now; 5/5 fail as stale (BUG-005), so not wired in |
+| E2E specs that pass when run | — | **0 of 5** | first execution ever | 4 assert route redirects against a modal flow; 1 asserts nothing |
+| Lint findings, `app/` | — | **110** → **0** | 109 F401, 1 E712 | 83 ignored by name as re-exports, 26 deleted, 1 fixed; gate can now fail |
+| Dependency advisories (prod) | — | **5 high** → **0** | frontend runtime deps | fixed; `--audit-level=high` now gates CI |
 | Dependency advisories (backend) | — | **1** | `ecdsa` via `python-jose` | unreachable: JWTs are HS256 |
 | Secrets in worktree / git history | — | **0 / 0** | full tree, all refs | regex sweep |
 | Requirements coverage (P0/P1) | — | **22 of 22 traced** | see `rtm.csv` | 2 PARTIAL, 3 FAIL, rest PASS |

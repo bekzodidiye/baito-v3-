@@ -12,12 +12,19 @@ by hand — had never released anything, because the column it reads to decide
 who to pay is written by nothing. Reproduced 3/3, root-caused, fixed, and
 covered by a new regression test; the suite is green at 104/104.
 
-The conditions are not about that defect. They are that three of the checks
-this project appears to run do not run: the backend lint gate is `|| true`, a
-five-spec Playwright suite is invoked by nothing, and there is no dependency
-audit — while five high-severity advisories sit in the production frontend
-bundle. A release can ship today; it should not ship again with those gates
-still ornamental.
+The conditions were that three of the checks this project appears to run did
+not run. Two of those are now closed on the owner's instruction: the lint gate
+can fail, and a dependency audit runs before the build with the five advisories
+already gone. The third is closed differently than expected — the E2E suite is
+now runnable by one command, and running it for the first time showed that all
+five specs assert a login flow this app does not use (**BUG-005**). Wiring
+them into CI as they stand would make main red on every commit, so that
+condition stays open pending a decision that belongs to the owner, not the
+tester.
+
+What remains: no E2E coverage, no frontend unit tests, and four unanswered
+questions in `project-facts.md`, two of which decide what "done" means for the
+passport scans and card references this system stores. A release can ship.
 
 ## 2. Scope
 
@@ -47,9 +54,10 @@ exist for all three roles, the browser tooling reads console and network.
 | ID | Sev | Pri | Type | Component | Summary | Status |
 |---|---|---|---|---|---|---|
 | BUG-001 | S2 | P1 | functional | `tasks.py::auto_release_escrow` | Releases nothing, ever — `jobs.hiredWorkerId` is never written | **Fixed + test** |
-| BUG-002 | S3 | P2 | functional | `schemas/job.py` | NUL byte in any text field answers 500, not 422 | Open |
-| BUG-003 | S3 | P2 | security | frontend deps | 5 high-severity advisories in the production bundle | Open |
-| BUG-004 | S3 | P2 | process | `ci.yml` | Lint gate cannot fail; E2E suite never runs; no frontend unit tests | Open |
+| BUG-002 | S3 | P2 | functional | `schemas/job.py` | NUL byte in any text field answers 500, not 422 | **Fixed + tests** |
+| BUG-003 | S3 | P2 | security | frontend deps | 5 high-severity advisories in the production bundle | **Fixed + CI gate** |
+| BUG-004 | S3 | P2 | process | `ci.yml` | Lint gate cannot fail; E2E suite never runs; no frontend unit tests | **Partly fixed** — gates real; E2E blocked on BUG-005 |
+| BUG-005 | S3 | P2 | process | `frontend/tests/` | All 5 Playwright specs assert a login flow the app does not use | Open — needs an owner decision |
 | OBS-01 | S4 | P4 | data | `transportRate` | Accepts `-50000`; traced — free-text display field, never parsed into money | Observation |
 | OBS-02 | — | — | design | `POST /jobs` | Duplicate submits create two postings; an `Idempotency-Key` mechanism exists but only payments use it | Observation |
 
@@ -62,9 +70,9 @@ exist for all three roles, the browser tooling reads console and network.
 | Data | escrow, balances, applications | pass | 0 | 0 | escrow_service 93% |
 | **UI sweep** | 52 screens · 1,423 elements | 52 | 0 | 0 | 88.1% of screens; breadth crawl, not per-element clicks |
 | AI eval | — | — | — | — | **N/A — no model** |
-| Security | 12 systematic checks | 11 | 1 | 0 | BUG-003 open |
+| Security | 12 systematic checks | 12 | 0 | 0 | BUG-003 closed |
 | Performance | 3 load profiles | 3 | 0 | 0 | 1,000 req @200 concurrent, all 200 OK |
-| E2E | 5 specs exist | 0 | 0 | **5** | nothing invokes them (BUG-004) |
+| E2E | 5 specs exist | 0 | **5** | 0 | runnable now; all 5 stale (BUG-005) |
 | A11y | names + focus order, 14 routes | partial | — | — | 2 unnamed controls remain; contrast unmeasured |
 
 ## 4b. UI sweep coverage
@@ -110,15 +118,26 @@ threshold is configured in CI.
 
 ## 8. Conditions for GO
 
-1. Remove `|| true` from the lint step, after clearing or explicitly ignoring
-   the 110 findings in `app/` (49 are auto-fixable). — *owner*
-2. Run `npm audit fix` for the five production advisories and smoke-test
-   routing, then add `npm audit --omit=dev --audit-level=high` to CI. — *owner*
-3. Wire the five existing Playwright specs to a `test:e2e` script and a CI job.
-   — *owner*
-4. Fix BUG-002 with a test: reject control characters in the shared string
-   validators. — *owner*
-5. Answer the four open questions in `project-facts.md` — compliance regime,
+Four of the five were closed after the verdict was written, on the owner's
+instruction. What follows is their state as of this revision.
+
+1. ~~Remove `|| true` from the lint step.~~ **Done.** 83 findings were
+   re-exports and are ignored by name in a new `backend/ruff.toml`; 26 were dead
+   imports and are deleted; 1 needed the SQLAlchemy idiom rather than ruff's
+   suggestion. Ruff is pinned. The gate can now fail.
+2. ~~Close the five advisories and add a CI audit.~~ **Done.** All five are
+   patch bumps inside the declared ranges. `npm audit --omit=dev
+   --audit-level=high` now runs before the build.
+3. **Wire the Playwright specs to CI — still open, and now understood.** The
+   `test:e2e` script and a `webServer` exist, so one command runs them. Running
+   them surfaced **BUG-005**: all five fail, none for a product reason. Wiring
+   them in as they stand would make main red on every commit. Needs an owner
+   decision: update them to the modal-based flow, or delete them and record
+   that E2E is uncovered. — *owner*
+4. ~~Fix BUG-002 with a test.~~ **Done.** Control characters are refused at the
+   schema layer with a 422; four tests, one of which asserts that emoji, Arabic,
+   Cyrillic and accented Latin stay accepted.
+5. **Answer the four open questions in `project-facts.md`** — compliance regime,
    the critical-failure definition, release sign-off, and whether an age gate is
    intended. Two of them gate what "done" means for PII. — *owner*
 
@@ -142,7 +161,7 @@ threshold is configured in CI.
 - `test-plan.md` · `risk-register.md` · `rtm.csv`
 - `ui-inventory.md` (59 screens) · `ui-sweep.md` (52 visited, 1,423 elements)
 - `api-checklist.md` (94 endpoints)
-- `findings/BUG-001…BUG-004`
+- `findings/BUG-001…BUG-005`
 - `sessions/SES-01-ugly-data.md` · `sessions/SES-02-permissions-and-interruption.md`
 - `perf/results.md`
 - `security/llm-top10.md` (N/A, with basis) · `security/scans/` (ruff, pip-audit,
