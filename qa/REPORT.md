@@ -45,7 +45,10 @@ accessible names and focus order; concurrency and load on read paths.
 - **Cross-browser and real devices.** Chromium only.
 - **Colour contrast, and a real screen reader.** Accessible names and tab order
   were checked programmatically; that is roughly a third of what an audit needs.
-  One control is still unnamed: the password-visibility toggle on `/login`.
+  One control is still unnamed: the password-visibility toggle on `/login`. And
+  74 accessible names are hardcoded Uzbek literals against 55 read from the
+  translations table, so a screen reader in another language still hears Uzbek
+  across much of the app — measured, not exercised, and it needs its own pass.
 
 **Blocked.** Nothing. Every §19 precondition was met: the app runs, credentials
 exist for all three roles, the browser tooling reads console and network.
@@ -59,7 +62,7 @@ exist for all three roles, the browser tooling reads console and network.
 | BUG-003 | S3 | P2 | security | frontend deps | 5 high-severity advisories in the production bundle | **Fixed + CI gate** |
 | BUG-004 | S3 | P2 | process | `ci.yml` | Lint gate cannot fail; E2E suite never runs; no frontend unit tests | **Partly fixed** — gates real; E2E blocked on BUG-005 |
 | BUG-005 | S3 | P2 | process | `frontend/tests/` | All 5 Playwright specs assert a login flow the app does not use | Open — needs an owner decision |
-| BUG-006 | S3 | P2 | functional | `PaymentResult.tsx` | Payment result screens render Russian to an English interface | Open |
+| BUG-006 | S3 | P2 | functional | `PaymentResult.tsx` | Payment result screens render Russian to an English interface | **Fixed** |
 | OBS-01 | S4 | P4 | data | `transportRate` | Accepts `-50000`; traced — free-text display field, never parsed into money | Observation |
 | OBS-02 | — | — | design | `POST /jobs` | Duplicate submits create two postings; an `Idempotency-Key` mechanism exists but only payments use it | Observation |
 
@@ -70,7 +73,7 @@ exist for all three roles, the browser tooling reads console and network.
 | Functional (backend suite) | 108 | 108 | 0 | 0 | 69% line coverage |
 | API | 94 endpoints enumerated | see below | 1 | 0 | auth/authz swept across all; per-endpoint happy paths partial |
 | Data | escrow, balances, applications | pass | 0 | 0 | escrow_service 93% |
-| **UI sweep** | 59 screens · 1,513 elements | 57 | 2 | 0 | **100% of screens**; breadth crawl, not per-element clicks |
+| **UI sweep** | 59 screens · 1,513 elements | 59 | 0 | 0 | **100% of screens**; BUG-006 found here and fixed |
 | AI eval | — | — | — | — | **N/A — no model** |
 | Security | 12 systematic checks | 12 | 0 | 0 | BUG-003 closed |
 | Performance | 3 load profiles | 3 | 0 | 0 | 1,000 req @200 concurrent, all 200 OK |

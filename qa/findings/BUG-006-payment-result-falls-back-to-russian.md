@@ -49,8 +49,33 @@ Move the six strings into `translations/{uz,ru,en}.ts` and read them through
 the `t` the component already has in scope. That is the pattern the rest of the
 app uses and the one `c06aa95` applied to the settings screen.
 
-**Regression risk if fixed**
-Low; the change is display-only. Re-check all three languages on both screens.
+**Fixed** — `PaymentResult.tsx` now reads five keys through the `t` it already
+had. Verified in the browser, both screens, all three languages, with no console
+errors:
+
+| | uz | ru | en |
+|---|---|---|---|
+| success heading | To'lov muvaffaqiyatli! | Оплата прошла успешно! | Payment successful |
+| error heading | To'lovda xatolik | Ошибка при оплате | Payment failed |
+| back button | Orqaga qaytish | Вернуться назад | Go back |
+
+Uzbek and Russian are byte-identical to what they rendered before, which is the
+regression this change could have caused. `uz.ts`, `ru.ts` and `en.ts` are each
+at 192 keys, so the three stay in step. `tsc --noEmit` clean.
+
+**Two things found while fixing it, recorded rather than acted on**
+
+1. `frontend/src/features/payments/PaymentSuccessScreen.tsx` and
+   `PaymentFailedScreen.tsx` exist and **nothing imports them**. They are dead
+   code that looks exactly like the screens a person would go fix. Deleting
+   them is a decision for the owner; the risk of leaving them is that the next
+   locale fix lands in the wrong file.
+2. **74 accessible names are hardcoded string literals**, against 55 that are
+   read from the translations table. `"Orqaga"` alone appears 7 times. So a
+   screen reader in English or Russian still announces Uzbek across much of the
+   app — the same defect class as this one, at a scale that needs its own pass
+   rather than a patch. Not filed as a defect here because it was measured, not
+   exercised: no screen reader was run.
 
 **Related, not a defect**
 The same component decides success purely from `location.pathname.includes('success')`
