@@ -63,7 +63,7 @@ exist for all three roles, the browser tooling reads console and network.
 | BUG-004 | S3 | P2 | process | `ci.yml` | Lint gate cannot fail; E2E suite never runs; no frontend unit tests | **Fixed** except frontend unit tests, which remain a decision |
 | BUG-005 | S3 | P2 | process | `frontend/tests/` | 5 Playwright specs never ran; 2 asserted a flow the app has never had | **Fixed** — 7 pass, CI job added |
 | BUG-006 | S3 | P2 | functional | `PaymentResult.tsx` | Payment result screens render Russian to an English interface | **Fixed** |
-| BUG-007 | S3 | P2 | functional / a11y | `OnboardingTour.tsx` | The tour's ✕ is painted but unreachable, and has no accessible name | Open |
+| BUG-007 | S3 | P2 | functional / a11y | `OnboardingTour.tsx` | The tour's ✕ is painted but unreachable, and has no accessible name | **Fixed + test** |
 | OBS-01 | S4 | P4 | data | `transportRate` | Accepts `-50000`; traced — free-text display field, never parsed into money | Observation |
 | OBS-02 | — | — | design | `POST /jobs` | Duplicate submits create two postings; an `Idempotency-Key` mechanism exists but only payments use it | Observation |
 
@@ -78,7 +78,7 @@ exist for all three roles, the browser tooling reads console and network.
 | AI eval | — | — | — | — | **N/A — no model** |
 | Security | 12 systematic checks | 12 | 0 | 0 | BUG-003 closed |
 | Performance | 3 load profiles | 3 | 0 | 0 | 1,000 req @200 concurrent, all 200 OK |
-| E2E | 15 specs | 14 | 0 | 1 | was 5 specs, 0 passing and never invoked; 1 fixme names BUG-007 |
+| E2E | 15 specs | 15 | 0 | 0 | was 5 specs, 0 passing and never invoked |
 | A11y | names + focus order, 14 routes | partial | — | — | 2 unnamed controls remain; contrast unmeasured |
 
 ## 4b. UI sweep coverage
@@ -182,7 +182,10 @@ languages correctly, and — asserted deliberately — it takes every click mean
 for the page beneath it, so a change that leaves it open shows up here rather
 than as four unrelated specs going red.
 
-Writing it found **BUG-007**.
+Writing it found **BUG-007**, which is fixed in the same change: the ✕ now sits
+above the content block that was taking its clicks, and carries an accessible
+name in all three languages. The assertion that was `test.fixme` is a passing
+test.
 
 ## 10. Artefacts
 

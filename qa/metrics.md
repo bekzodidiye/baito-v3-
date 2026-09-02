@@ -30,8 +30,8 @@ nobody had opened.
 | Coverage, `app/core/security.py` | — | **90%** | — | |
 | Frontend unit tests | — | **0** | — | none exist |
 | E2E specs that run in CI | 0 of 5 | **15** | own job, Postgres + Redis + API | gates `validate-docker` and `deploy` |
-| E2E specs that pass when run | 0 of 5 | **14 pass, 1 fixme** | against the built bundle | +8 for the onboarding tour; the fixme names BUG-007 and reports on every run |
-| Defects found by writing the tour spec | — | **1** | 8 specs | BUG-007 |
+| E2E specs that pass when run | 0 of 5 | **15 of 15** | against the built bundle | +8 for the onboarding tour; the fixme became a passing test when BUG-007 was fixed |
+| Defects found by writing the tour spec | — | **1** | 8 specs | BUG-007, found and fixed in the same change |
 | Lint findings, `app/` | — | **110** → **0** | 109 F401, 1 E712 | 83 ignored by name as re-exports, 26 deleted, 1 fixed; gate can now fail |
 | Dependency advisories (prod) | — | **5 high** → **0** | frontend runtime deps | fixed; `--audit-level=high` now gates CI |
 | Dependency advisories (backend) | — | **1** | `ecdsa` via `python-jose` | unreachable: JWTs are HS256 |

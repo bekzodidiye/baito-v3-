@@ -5,6 +5,7 @@
 - **Component:** `frontend/src/components/OnboardingTour.tsx`
 - **Environment:** branch `claude/onboarding-turi-speci`, local stack, Chromium 1280×720, `vite preview` on the built bundle
 - **Reproduction rate:** 3/3
+- **Status:** **Fixed**, in the same PR as the spec that found it
 - **Traces to:** R-14 (accessibility); §9.1 — found while writing the tour's first spec
 
 **Preconditions**
@@ -56,7 +57,19 @@ already localises correctly in all three languages.
 Low. Re-check that the dialog's other two buttons still take their clicks, and
 that the close still records `baito_has_seen_tour`.
 
-**Test status**
-`frontend/tests/onboarding.spec.ts` carries the assertion as `test.fixme`,
-naming this finding. It is not skipped silently: it reports as a known gap on
-every run and turns into a passing test the moment the control works.
+**Fix applied**
+`z-20` on the button, so it sits above the `relative z-10` content block that was
+winning the hit test, and an `aria-label` from the component's own `t` object —
+the same place `skip`, `next` and `start` live, in all three languages. Nothing
+else changed; the decorative wrapper was left alone rather than given
+`pointer-events: none`, because raising the button is the smaller change and
+does not alter what else in that corner can be reached.
+
+**Verified**
+`frontend/tests/onboarding.spec.ts` carried the assertion as `test.fixme` when
+the finding was written. It is now a real test: the close control is found by
+its accessible name — which it did not have — and clicked like any other button.
+The two language specs additionally assert the name is localised, so a repeat of
+BUG-006 on this control would fail here.
+
+Full suite: **15 passed, 0 skipped.** Was 14 passed, 1 fixme.
