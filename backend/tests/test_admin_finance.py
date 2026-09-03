@@ -209,6 +209,15 @@ def test_admin_transactions_list_reports_uzs_not_tiyin(client):
     body = client.get("/api/v1/admin/transactions").json()
     assert body["total"] == 1
     assert body["items"][0]["amount"] == 250_000
+
+    # The payments screen both sides use reads a different endpoint that had
+    # the same defect: it returned the ORM rows straight through, so a 250,000
+    # so'm hold was rendered as "25 000 000".
+    login(client, employer)
+    rows = client.get("/api/v1/payments/transactions").json()
+    assert len(rows) == 1
+    assert rows[0]["amount"] == 250_000
+    assert rows[0]["platformFee"] == 0  # still held, so no fee taken yet
     assert body["items"][0]["platformFee"] == 0
 
 
