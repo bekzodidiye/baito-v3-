@@ -1,9 +1,9 @@
-### [BUG-014] Mixed-script typos and a missing empty state on three admin screens
+### [BUG-014] Mixed-script typos and a missing empty state on four admin screens
 
 - **Severity:** S4      **Priority (proposed):** P3
 - **Type:** content / cosmetic
 - **Component:** `frontend/src/features/admin/AdminAutoMatching.tsx`,
-  `AdminAutoEscrowDocs.tsx`, `AdminCategories.tsx`
+  `AdminAutoEscrowDocs.tsx`, `AdminCategories.tsx`, `AdminSupport.tsx`
 - **Environment:** branch `claude/qa-protokol-2`, disposable local QA stack
 - **Reproduction rate:** always (static text / structural, not data-dependent)
 - **Status:** **Fixed**, same PR as this report
@@ -31,6 +31,13 @@ below a header and a search box is indistinguishable from the screen being broke
 anti-pattern already fixed elsewhere in this codebase (`AdminPayouts.tsx` correctly shows
 "Kutilayotgan so'rov yo'q" for its own empty list).
 
+**4. Same missing empty state, on the support ticket list** — `AdminSupport.tsx`. Found
+immediately after fixing #3, by checking whether the same pattern (`{list.map(...)}` with no
+fallback) appeared anywhere else in the admin panel. `Support Ticketlar` → the left-hand ticket
+list is blank with zero tickets, or when the active status filter (`Yangi` / `Jarayonda` /
+`Hal Etildi`) matches none — same blank-panel-looks-broken problem as #3, in a different
+component.
+
 **Impact**
 Low on all three — none block a workflow or lose data. Grouped as one finding because they are
 the same class of defect (unproofread/unfinished content and UI state) on screens that otherwise
@@ -44,10 +51,14 @@ screen" — these are exactly the kind of thing that bar is meant to catch.
   underlying list is genuinely empty, "Qidiruvga mos kategoriya topilmadi" when a search term
   filtered everything out — shown in place of the grid whenever `filtered.length === 0` and the
   screen isn't still loading.
+- `AdminSupport.tsx`: same pattern — "Hozircha murojaatlar yo'q" when there are no tickets at
+  all, "Ushbu holatda murojaat topilmadi" when the active status filter matches none.
 
 **Verified**
 Live in the browser: both labels read correctly after the fix; the categories screen (genuinely
 empty in this QA environment — confirmed via `GET /admin/categories` → `[]`) now shows "Hozircha
-kategoriya qo'shilmagan" instead of a blank grid.
+kategoriya qo'shilmagan" instead of a blank grid, and the support tickets screen (confirmed empty
+via `GET /admin/support-tickets` → `{"total": 0, "items": []}`) now shows "Hozircha murojaatlar
+yo'q" instead of blank space next to the "Ticket tanlanmadi" placeholder.
 
 Frontend typecheck (`tsc --noEmit`): clean. Frontend unit tests: **49 passed, 0 failed**.
