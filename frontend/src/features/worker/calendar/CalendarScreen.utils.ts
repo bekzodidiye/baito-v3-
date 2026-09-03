@@ -1,25 +1,6 @@
 import { Job } from '../../../types';
 
-export const MONTHS_TRANSLATIONS = {
-  uz: [
-    'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
-    'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'
-  ],
-  ru: [
-    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
-  ],
-  en: [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ]
-};
-
-export const WEEKDAYS_TRANSLATIONS = {
-  uz: ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'],
-  ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-  en: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
-};
+export { MONTHS_TRANSLATIONS, WEEKDAYS_TRANSLATIONS } from '../../../utils/dateFormat';
 
 export const getJobDates = (job: Job): Date[] => {
   let dateStr = job.workDate || job.periodText || '';
