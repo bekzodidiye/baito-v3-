@@ -177,6 +177,26 @@ export const isOverlappingWithActiveJob = (job: Job, allJobs: Job[], yearFromCon
   return false;
 };
 
+/** Is the grid cell for `day` before the calendar's reference date?
+ *
+ * `currentMonth` is 0-indexed (Date.getMonth) while `monthFromContext` comes
+ * from a parsed YYYY-MM-DD and is 1-indexed. Comparing the two raw makes every
+ * day of the current month look past — which is what labelled a job due today
+ * as "O'tkazib yuborildi" in its own tooltip.
+ */
+export const isDayInPast = (
+  day: number,
+  currentYear: number,
+  currentMonth: number,
+  yearFromContext: number,
+  monthFromContext: number,
+  dayFromContext: number
+): boolean => {
+  if (currentYear !== yearFromContext) return currentYear < yearFromContext;
+  if (currentMonth + 1 !== monthFromContext) return currentMonth + 1 < monthFromContext;
+  return day < dayFromContext;
+};
+
 export const getDayStatusForList = (
   day: number,
   jobs: Job[],
