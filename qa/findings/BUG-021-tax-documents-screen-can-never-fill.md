@@ -3,7 +3,7 @@
 - **Severity:** S3
 - **Component:** frontend / worker profile (`TaxesScreen.tsx`), backend (`soliq_service.py`)
 - **Found:** 2026-09-03, round-3 per-control click sweep
-- **Status:** **Open** — not fixed; needs a product decision (build fiscalisation, or stop promising it)
+- **Status:** **Partly fixed** — the false promise is removed (commit below); building fiscalisation remains open as a feature
 
 ## What happens
 
