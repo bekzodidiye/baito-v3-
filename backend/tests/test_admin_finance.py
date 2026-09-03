@@ -193,6 +193,25 @@ def test_escrow_holds_are_listed_for_admin(client):
     assert body["items"][0]["amountUzs"] == 250_000
 
 
+def test_admin_transactions_list_reports_uzs_not_tiyin(client):
+    """Transaction.amount/platformFee are stored in tiyin (UZS * 100), same as
+    every other money column in this table. /admin/escrow already converted
+    back to UZS for display; this list endpoint returned the raw tiyin value
+    instead, so the admin transactions screen showed every amount and every
+    commission figure 100x too large."""
+    employer = make_user(role="employer", phone="+998921111120", balance=1_000_000)
+    worker = make_user(phone="+998921111121")
+    job = make_job(employer.id, salary="250000")
+    _hire_with_escrow(client, employer, worker, job)
+
+    admin = make_user(role="admin", phone="+998921111122")
+    login(client, admin)
+    body = client.get("/api/v1/admin/transactions").json()
+    assert body["total"] == 1
+    assert body["items"][0]["amount"] == 250_000
+    assert body["items"][0]["platformFee"] == 0
+
+
 # ── Transaction atomicity (TX-01) ──────────────────────────────────────────
 
 def test_escrow_service_does_not_commit_on_its_own(client):
