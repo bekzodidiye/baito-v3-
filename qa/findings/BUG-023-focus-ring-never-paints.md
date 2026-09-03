@@ -3,7 +3,7 @@
 - **Severity:** S3 (WCAG 2.4.7 Focus Visible, Level AA)
 - **Component:** frontend / Tailwind v4 ring utilities (`LanguageSelector.tsx`, `ProfileWidgets`, chat input bar, and every control combining `shadow-[…]` with `focus-visible:ring-*`)
 - **Found:** 2026-09-04, keyboard pass of the round-3 sweep
-- **Status:** open
+- **Status:** **Fixed** — a single unlayered `:focus-visible` rule in `frontend/src/index.css`; verified across all 11 swept routes (see below)
 
 ## What happens
 
@@ -94,3 +94,38 @@ focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bra
 Applying it once in a shared layer (or a small `focusRing` class) would cover the set,
 rather than editing each call site. Whatever the shape, the check is the one this finding
 used: the element's painted style must differ between focused and unfocused.
+
+## What was done
+
+One unlayered rule at the end of `frontend/src/index.css`. Unlayered CSS outranks
+Tailwind's layered utilities, so it beats `focus:outline-none` without `!important`:
+
+```css
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+```
+
+`currentColor` is the part that makes one rule safe everywhere: a light button draws the
+outline in its own dark text colour, a dark one in white — which is what the computed
+styles showed those controls already intending (`rgb(0, 6, 102)` on the language selector,
+`rgb(255, 255, 255)` on "Ish beruvchi rejimiga o'tish").
+
+**Verified** — controls with no focus indicator, before → after:
+
+| Route | Before | After |
+|---|---|---|
+| `/jobs` | 17 of 41 | 16 — all inside the Leaflet map |
+| `/messages` | 3 of 17 | **0** |
+| `/profile` | 3 of 23 | **0** |
+| `/calendar`, `/notifications`, `/applications`, `/reviews`, `/support-chat` | 1 each | **0** |
+| `/settings`, `/security`, `/help` | 0 | 0 |
+
+The three controls verified by hand with real `Tab` presses now change
+`outline-style: none` → `solid`, each in the colour its background calls for.
+
+The 16 that remain on `/jobs` are all inside `.leaflet-container`, where `index.css`
+deliberately suppresses the outline to stop a black rectangle appearing on click. That is
+pre-existing and intentional; making map elements keyboard-visible is a separate piece of
+work, and is noted in `qa/click-sweep.md` as unmeasured rather than fixed.
