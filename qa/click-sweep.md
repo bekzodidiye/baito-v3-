@@ -92,6 +92,7 @@ empty list with content that was never real.
 | BUG-020 | S4 | The Payments search button has no handler, but is labelled for screen readers |
 | BUG-021 | S3 | "Soliq hujjatlari" promises documents that no code path can produce |
 | BUG-022 | S2 | The Payments screen renders two invented transactions whenever the list is empty |
+| BUG-023 | S3 | Keyboard focus is invisible wherever a control carries its own `shadow-[…]` |
 
 BUG-017 and BUG-018 are the same shape: **the UI reports success for work it never did.**
 Both have a correct implementation of the very same action elsewhere in the codebase
@@ -109,13 +110,56 @@ control-by-control is `/admin`.
 result triaged to one of the causes above. `/payments/success` and `/payments/error` —
 the two screens round 1's BUG-006 was found on — are clean now apart from the skip link.
 
+## Mobile pass — Pixel 7, real touch
+
+The desktop sweep ran at 1400×900 with a mouse. This pass re-ran the worker routes as a
+phone (Playwright's `Pixel 7` device: 393×852, touch enabled, mobile user agent) and used
+`tap()` rather than `click()`, so the app received real touch events.
+
+**16 routes, 171 controls. No new defects.**
+
+| Outcome | Count |
+|---|---|
+| acted | 90 |
+| navigated | 35 |
+| click timed out | 37 |
+| no observable effect | 6 |
+| skipped (logout) | 2 |
+| not present on reload | 1 |
+
+All six no-effect results are the familiar correct ones: the current page's own nav item
+(`Ish qidirish` on `/jobs`, `Kalendar` on `/calendar`, `Xabarlar` on `/messages`), an
+already-active filter, and the two `tel:` / `mailto:` links on `/help`. The 37 timeouts are
+the skip link (16) and the same Leaflet labels and collapsed-sheet controls as on desktop.
+
+Two layout checks a phone actually suffers from:
+
+- **Horizontal scroll: none.** `scrollWidth <= clientWidth` on all 16 routes.
+- **Touch targets under 44×44 CSS px: 20**, and every one of them misses on a single axis
+  only — the back and menu buttons are 36–40 px wide by a full 44 px tall. Worth tidying,
+  not worth a finding on its own. The one genuine outlier is Leaflet's own attribution
+  link (51×14), which is third-party chrome.
+
+## Keyboard pass
+
+Tabbing each route and comparing every control's painted style unfocused vs focused.
+Reachability is good — on nine of eleven routes Tab reaches every visible control; `/jobs`
+reaches 25 of 41, the shortfall being the controls inside the collapsed bottom sheet, which
+are not operable until the list is opened either.
+
+What it did find is **BUG-023**: on controls that set their own `shadow-[…]`, the
+Tailwind v4 focus ring never composes into `box-shadow`, and `focus:outline-none` has
+already removed the browser outline — so focus is invisible. `/settings`, `/security` and
+`/help` are unaffected because their controls change `outline` instead.
+
 ## Not covered by this sweep
 
 - **Admin** (`/admin`, 21 sub-screens). Round 2 swept all of them at screen level; they
   were not re-clicked control-by-control here. The sweep was scoped to the user-facing
   roles the request named.
-- **Keyboard activation.** Controls were clicked, not tabbed to and pressed with
-  Enter/Space. The map markers (`role="button"` on a Leaflet `divIcon`) are the place that
-  most warrants a keyboard pass.
-- **Mobile viewport.** Everything ran at 1400×900. BUG-019 is specifically a desktop
-  defect, so the mobile behaviour of the same button is untested here.
+- **Keyboard *activation*.** Focus reachability and focus visibility were measured;
+  pressing Enter/Space on each control to confirm it fires was not. The Leaflet map markers
+  (`role="button"` `tabindex="0"` on a `divIcon`) are the place that most warrants it — the
+  probe could not find a marker in the DOM within its wait, so their keyboard behaviour
+  remains unmeasured rather than confirmed either way.
+- **Employer and guest routes on mobile.** The mobile pass covered the 16 worker routes.
