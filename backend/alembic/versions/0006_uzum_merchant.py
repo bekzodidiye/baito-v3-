@@ -6,6 +6,13 @@ again. Each attempt is a UzumTransaction, keyed by the identifier Uzum gives
 it, which is what makes a repeated /create answer 10010 rather than creating a
 second row.
 
+A note on the guards below. 0001 ends with ``Base.metadata.create_all``, so on
+a fresh database every table the models declare — these two included — already
+exists by the time this runs. Creating them unconditionally works on an
+existing database and fails on a new one, which is the opposite of what a
+migration should do. Every migration after 0001 in this repo carries the same
+check for the same reason.
+
 Revision ID: 0006_uzum_merchant
 Revises: 0005_notif_templates
 Create Date: 2026-09-03
@@ -15,6 +22,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy import inspect
 
 revision: str = "0006_uzum_merchant"
 down_revision: Union[str, None] = "0005_notif_templates"
@@ -23,6 +31,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    tables = set(inspect(bind).get_table_names())
+
+    if "payment_orders" not in tables:
+        _create_payment_orders()
+    if "uzum_transactions" not in tables:
+        _create_uzum_transactions()
+
+
+def _create_payment_orders() -> None:
     op.create_table(
         "payment_orders",
         sa.Column("id", sa.String(), nullable=False),
@@ -44,6 +62,8 @@ def upgrade() -> None:
     op.create_index("ix_payment_orders_jobId", "payment_orders", ["jobId"])
     op.create_index("ix_payment_orders_status", "payment_orders", ["status"])
 
+
+def _create_uzum_transactions() -> None:
     op.create_table(
         "uzum_transactions",
         sa.Column("transId", sa.String(), nullable=False),
@@ -69,5 +89,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_table("uzum_transactions")
-    op.drop_table("payment_orders")
+    bind = op.get_bind()
+    tables = set(inspect(bind).get_table_names())
+    if "uzum_transactions" in tables:
+        op.drop_table("uzum_transactions")
+    if "payment_orders" in tables:
+        op.drop_table("payment_orders")

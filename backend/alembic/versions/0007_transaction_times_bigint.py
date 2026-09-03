@@ -21,6 +21,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy import inspect
 
 revision: str = "0007_tx_times_bigint"
 down_revision: Union[str, None] = "0006_uzum_merchant"
@@ -29,11 +30,20 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # On a fresh database 0001's create_all has already made these BigInteger,
+    # because that is what the model now says. Altering is only needed where the
+    # table predates the fix.
+    bind = op.get_bind()
+    if "transactions" not in set(inspect(bind).get_table_names()):
+        return
     op.alter_column("transactions", "performTime", type_=sa.BigInteger(), existing_nullable=True)
     op.alter_column("transactions", "cancelTime", type_=sa.BigInteger(), existing_nullable=True)
 
 
 def downgrade() -> None:
+    bind = op.get_bind()
+    if "transactions" not in set(inspect(bind).get_table_names()):
+        return
     # Going back narrows the column, so any row written since would not fit.
     op.alter_column("transactions", "performTime", type_=sa.Integer(), existing_nullable=True)
     op.alter_column("transactions", "cancelTime", type_=sa.Integer(), existing_nullable=True)
