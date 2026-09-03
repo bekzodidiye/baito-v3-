@@ -149,6 +149,36 @@ def test_admin_can_release_a_frozen_wage_to_the_worker(client):
         assert db.query(User).filter(User.id == worker.id).first().balance == 225_000
 
 
+def test_release_refuses_a_worker_who_was_never_hired_for_this_job(client):
+    """The admin free-types a worker id into a prompt with no picker. A typo,
+    a stale id from another tab, or a compromised admin session must not be
+    able to move real money to whoever that id happens to belong to."""
+    employer = make_user(role="employer", phone="+998921111130", balance=1_000_000)
+    hired_worker = make_user(phone="+998921111131", balance=0)
+    bystander = make_user(phone="+998921111132", balance=0)
+    job = make_job(employer.id, salary="250000")
+    _hire_with_escrow(client, employer, hired_worker, job)
+
+    admin = make_user(role="admin", phone="+998921111133")
+    login(client, admin)
+    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
+                       json={"action": "release", "reason": "wrong id, by mistake",
+                             "workerId": bystander.id})
+    assert resp.status_code == 400
+
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == bystander.id).first().balance == 0
+        assert db.query(User).filter(User.id == hired_worker.id).first().balance == 0
+
+    # The hold is still there, waiting for the right id.
+    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
+                       json={"action": "release", "reason": "correct id this time",
+                             "workerId": hired_worker.id})
+    assert resp.status_code == 200
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == hired_worker.id).first().balance == 225_000
+
+
 def test_escrow_holds_are_listed_for_admin(client):
     employer = make_user(role="employer", phone="+998921111116", balance=1_000_000)
     worker = make_user(phone="+998921111117")
