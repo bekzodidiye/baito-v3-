@@ -3,7 +3,7 @@
 - **Severity:** S3
 - **Component:** frontend / job cards (`features/worker/search/JobCardItem.tsx`, `components/map/JobCardItem.tsx`)
 - **Found:** 2026-09-03, round-3 per-control click sweep
-- **Status:** open
+- **Status:** **Fixed** — see commit `1e08c82`; the fallback now lives in `utils/shareJob` and all three share buttons use it
 
 ## What happens
 

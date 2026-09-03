@@ -3,7 +3,7 @@
 - **Severity:** S4
 - **Component:** frontend / payments (`PaymentsScreen.tsx:109`)
 - **Found:** 2026-09-03, round-3 per-control click sweep
-- **Status:** open
+- **Status:** **Open** — not fixed; the button sits on the Payments screen, which the owner has asked to leave untouched for now
 
 ## What happens
 

@@ -3,7 +3,7 @@
 - **Severity:** S2
 - **Component:** frontend / payments (`PaymentsScreen.tsx:349`)
 - **Found:** 2026-09-03, round-3 per-control click sweep
-- **Status:** open
+- **Status:** **Open** — fix identified (delete the block) but not applied; the owner has asked to leave the payment system untouched for now
 - **Evidence:** `qa/evidence/BUG-022-fabricated-transactions.png`
 
 ## What happens

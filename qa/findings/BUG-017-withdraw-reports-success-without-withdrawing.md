@@ -3,7 +3,7 @@
 - **Severity:** S1
 - **Component:** frontend / payments (`PaymentModals.tsx`)
 - **Found:** 2026-09-03, round-3 per-control click sweep
-- **Status:** open
+- **Status:** **Fixed** — see commit `0d53ae6`; verified live (request fires, balance moves, a rejected call no longer shows success)
 - **Evidence:** `qa/evidence/BUG-017-withdraw-fake-success.png`
 
 ## What happens

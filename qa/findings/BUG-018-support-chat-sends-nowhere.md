@@ -3,7 +3,7 @@
 - **Severity:** S2
 - **Component:** frontend / support (`SupportChatScreen.tsx`)
 - **Found:** 2026-09-03, round-3 per-control click sweep
-- **Status:** open
+- **Status:** **Fixed** — see commit `d119f4b`; verified live (POST /support/messages fires, a ticket is created and appears in the admin queue)
 - **Evidence:** `qa/evidence/BUG-018-support-chat-fake-send.png`
 
 ## What happens
