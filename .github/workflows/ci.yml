@@ -146,17 +146,22 @@ jobs:
         # non-zero with findings rather than with an endpoint error. Never
         # replace this with `|| true`; the point of the gate is that it blocks.
         run: |
-          for attempt in 1 2 3; do
-            out=$(npm audit --omit=dev --audit-level=high 2>&1) && exit 0
+          # --fetch-timeout so a dead endpoint fails in seconds. Without it npm
+          # retries internally for ~6 minutes per call, so three attempts took
+          # twenty and still only spanned one outage window; failing fast lets
+          # more attempts cover more real time.
+          attempts=5
+          for attempt in $(seq 1 $attempts); do
+            out=$(npm audit --omit=dev --audit-level=high --fetch-timeout=30000 --fetch-retries=1 2>&1) && exit 0
             printf '%s\n' "$out"
-            if ! printf '%s' "$out" | grep -qiE 'audit endpoint returned an error|Service Unavailable|ENOTFOUND|ETIMEDOUT|EAI_AGAIN'; then
+            if ! printf '%s' "$out" | grep -qiE 'audit endpoint returned an error|Service Unavailable|ENOTFOUND|ETIMEDOUT|EAI_AGAIN|network timeout|request to .* failed'; then
               echo "::error::Audit found a high-severity advisory in a production dependency."
               exit 1
             fi
-            echo "::warning::Audit endpoint unreachable (attempt ${attempt}/3); retrying."
-            sleep $((attempt * 15))
+            echo "::warning::Audit endpoint unreachable (attempt ${attempt}/${attempts}); retrying."
+            sleep $((attempt * 20))
           done
-          echo "::error::Could not reach the npm audit endpoint after 3 attempts."
+          echo "::error::Could not reach the npm audit endpoint after ${attempts} attempts."
           exit 1
 
       - name: Build Frontend Production Artifacts
