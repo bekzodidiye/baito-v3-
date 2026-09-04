@@ -375,6 +375,12 @@ jobs:
           # Build first, swap second. `up -d --build` used to rebuild while the
           # old containers were already down, so the site was offline for the
           # whole build rather than for the few seconds a swap takes.
+          #
+          # The frontend's build context is ./frontend, so the root
+          # package.json holding the version is not visible from inside it.
+          # Read it here and hand it to compose as a build arg.
+          export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '')"
+          echo "Building frontend as version '${APP_VERSION}'"
           docker compose build
 
       - name: 🗄️ Apply Database Migrations
