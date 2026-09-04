@@ -5,8 +5,9 @@
 - **Component:** `frontend/src/features/admin/AdminAnalytics.tsx`
 - **Environment:** branch `claude/qa-protokol-2`, disposable local QA stack (5 users, 4 jobs)
 - **Reproduction rate:** always (100% static markup)
-- **Status:** **Open** — documented, not fixed in this pass (see Suggested fix / mitigation
-  for why); flagged as a follow-up task
+- **Status:** **Partly fixed** — the screen now states that its figures are not real, and
+  the two export buttons, which announced a download that never happened, are gone. The
+  aggregations themselves remain unbuilt and still need the definitions named below.
 - **Traces to:** §9.1 UI sweep — same family as BUG-013, found immediately after it while
   finishing the sweep of the remaining admin tabs
 
@@ -77,3 +78,34 @@ Flagged as a separate task (see accompanying `spawn_task`) rather than fixed in 
 QA.md's smallest-patch principle — this does not fit "smallest patch" and deserves its own
 scoped design (starting with: what counts as a daily/monthly active user, what "on time" means
 for completion rate, and whether region is derived from job location or employer profile).
+
+
+## What was done (2026-09-04)
+
+The mitigation this finding proposed, plus one thing it had not separated out.
+
+**1. The screen says it is placeholder.** A banner above the metric cards:
+
+> **Bu sahifadagi raqamlar haqiqiy emas** — Ko'rsatkichlar hali hisoblanmagan; quyidagi
+> qiymatlar namuna sifatida qo'yilgan va real ma'lumotni aks ettirmaydi. Qaror qabul qilish
+> uchun «Boshqaruv paneli» va «Moliya» bo'limlaridagi ma'lumotlardan foydalaning.
+
+**2. The export buttons are removed.** They were a defect in their own right, and of the
+same family as BUG-017, BUG-018 and BUG-022 — success announced for work never done:
+
+```js
+const handleExport = (type) => {
+  alert(`${type} ko'rinishidagi analitik hisobot muvaffaqiyatli yuklab olindi!`);
+};
+```
+
+Nothing was generated and nothing downloaded. Had they been wired up instead, they would
+have written these invented figures into a file that outlives the banner explaining them —
+so they were removed rather than implemented.
+
+Verified in the admin panel: the banner renders, both buttons are gone, and no dialog
+fires (`{warningShown: true, exportButtonsGone: true, alertFired: false}`).
+
+**Still open:** the aggregations. GMV and platform revenue can follow `admin_stats.py`'s
+`get_stats`; DAU/MAU, completion rate and average completion time need the product owner to
+define what "active" and "on time" mean here first.
