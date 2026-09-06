@@ -436,7 +436,14 @@ jobs:
     # The server has no public address — it is only reachable inside the
     # tailnet — so deployment has to run on the box itself. That makes the
     # self-hosted runner a hard dependency.
-    runs-on: self-hosted
+    #
+    # `baito-server` is not decoration. Once a second self-hosted runner was
+    # registered (the laptop that now runs the tests), a bare `self-hosted`
+    # matched both, and a deploy could land on whichever was free. On the
+    # laptop it would mkdir /home/scarygun/IntellexGroup/Baito, build the whole
+    # stack there, pass its own health check and report success — while the
+    # server got nothing. The label names the one machine that is the server.
+    runs-on: [self-hosted, baito-server]
     # Deploys must not stack. When runners were offline, two runs queued: an
     # older commit and a newer one. Whichever a returning runner happened to
     # take second would have been the build left on the server — so the older
