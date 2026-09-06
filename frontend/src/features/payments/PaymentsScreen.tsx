@@ -345,58 +345,6 @@ export const PaymentsScreen: React.FC = () => {
                 </p>
               </div>
             )}
-
-            {/* Dummy transactions to match design if there are none in db yet */}
-            {filteredTransactions.length === 0 && (
-              <>
-                {/* Transaction 1 */}
-                <div className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shadow-sm flex items-center justify-center">
-                      <ImageIcon className="text-slate-400 w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[15px] text-brand-primary mb-0.5">Lobia Machida — Smena</p>
-                      <div className="flex items-center gap-2 text-slate-500 text-[11px]">
-                        <span>12 Oct, 2023 • 14:30</span>
-                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                        <span className="flex items-center gap-1"><Wallet size={12} /> Hamyon</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="font-bold text-[16px] text-emerald-600">+45,000</p>
-                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700 mt-1">Bajarildi</span>
-                    </div>
-                    <ChevronRight className="text-slate-300 group-hover:text-brand-primary transition-colors w-6 h-6" />
-                  </div>
-                </div>
-                {/* Transaction 2 */}
-                <div className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-brand-primary/5 flex items-center justify-center shadow-sm">
-                      <Landmark className="text-brand-primary w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[15px] text-brand-primary mb-0.5">Mablag' yechish</p>
-                      <div className="flex items-center gap-2 text-slate-500 text-[11px]">
-                        <span>11 Oct, 2023 • 09:15</span>
-                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                        <span className="flex items-center gap-1"><CreditCard size={12} /> Uzcard ****4521</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="font-bold text-[16px] text-red-600">-20,000</p>
-                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-amber-100 text-[10px] font-bold text-amber-700 mt-1">Kutilmoqda</span>
-                    </div>
-                    <ChevronRight className="text-slate-300 group-hover:text-brand-primary transition-colors w-6 h-6" />
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         </section>
       </main>
