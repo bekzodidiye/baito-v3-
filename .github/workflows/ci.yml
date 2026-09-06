@@ -13,7 +13,7 @@ jobs:
   test-backend:
     name: 🐍 1. Backend Tests
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     # The suite used to run on SQLite while production runs PostgreSQL, so the
     # things that only Postgres does were never exercised: SELECT ... FOR UPDATE
@@ -108,7 +108,7 @@ jobs:
   test-frontend:
     name: 🎨 2. Frontend Typecheck & Build
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -186,7 +186,7 @@ jobs:
   test-e2e:
     name: 🎭 2b. End-to-End
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     # Five Playwright specs sat in the repo and nothing ran them. Running them
     # for the first time found that two asserted a flow this app has never had,
@@ -309,7 +309,7 @@ jobs:
     name: 🐳 3. Docker Compose Validation
     if: github.event_name == 'pull_request'
     needs: [test-backend, test-frontend, test-e2e]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

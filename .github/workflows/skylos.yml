@@ -1,7 +1,10 @@
 name: Skylos Analysis
 
 "on":
-  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 
 permissions:
@@ -10,7 +13,7 @@ permissions:
 jobs:
   skylos:
     name: Skylos Quality Gate
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 15
 
     permissions:
