@@ -47,6 +47,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Pinned rather than inherited. The runner's own python3 is whatever the
+      # machine happens to have - on the self-hosted runner that is 3.14, which
+      # has no psycopg2-binary wheel, so pip fell back to building from source
+      # and died on a missing pg_config:
+      #
+      #   Error: pg_config executable not found.
+      #   ERROR: Failed to build 'psycopg2-binary'
+      #
+      # 3.11 is also what backend/Dockerfile runs (python:3.11-slim), so the
+      # suite now exercises the interpreter production uses instead of
+      # whichever one the runner was last updated to.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Set up Python venv
         run: |
           python3 -m venv venv
@@ -217,6 +232,21 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      # Pinned rather than inherited. The runner's own python3 is whatever the
+      # machine happens to have - on the self-hosted runner that is 3.14, which
+      # has no psycopg2-binary wheel, so pip fell back to building from source
+      # and died on a missing pg_config:
+      #
+      #   Error: pg_config executable not found.
+      #   ERROR: Failed to build 'psycopg2-binary'
+      #
+      # 3.11 is also what backend/Dockerfile runs (python:3.11-slim), so the
+      # suite now exercises the interpreter production uses instead of
+      # whichever one the runner was last updated to.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Set up Python venv
         run: |
