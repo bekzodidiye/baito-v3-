@@ -119,7 +119,7 @@ export function useAdminData() {
         body: JSON.stringify({ isBanned: !currentBannedState }),
       });
       if (res !== undefined) {
-        (!currentBannedState ? "Foydalanuvchi bloklandi" : "Foydalanuvchi blokdan chiqarildi");
+        showToast(!currentBannedState ? "Foydalanuvchi bloklandi" : "Foydalanuvchi blokdan chiqarildi");
         fetchAllData();
       }
     } catch (e) {
@@ -134,7 +134,7 @@ export function useAdminData() {
         body: JSON.stringify({ status }),
       });
       if (res !== undefined) {
-        ("E'lon holati o'zgardi");
+        showToast("E'lon holati o'zgardi");
         fetchAllData();
       }
     } catch (e) {
@@ -162,7 +162,7 @@ export function useAdminData() {
         method: 'DELETE',
       });
       if (res !== undefined) {
-        ("E'lon o'chirib tashlandi");
+        showToast("E'lon o'chirib tashlandi");
         fetchAllData();
       }
     } catch (e) {
@@ -178,7 +178,7 @@ export function useAdminData() {
       });
       if (res !== undefined) {
         fetchAllData();
-        ("Tizim sozlamalari saqlandi");
+        showToast("Tizim sozlamalari saqlandi");
       }
     } catch (e) {
       console.error(e);
@@ -192,7 +192,7 @@ export function useAdminData() {
         body: JSON.stringify({ title, message, targetRole }),
       });
       if (res !== undefined) {
-        ("Ommaviy xabarnoma muvaffaqiyatli yuborildi");
+        showToast("Ommaviy xabarnoma muvaffaqiyatli yuborildi");
       }
     } catch (e) {
       console.error(e);
