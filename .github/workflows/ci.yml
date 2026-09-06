@@ -47,24 +47,31 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Pinned rather than inherited. The runner's own python3 is whatever the
-      # machine happens to have - on the self-hosted runner that is 3.14, which
-      # has no psycopg2-binary wheel, so pip fell back to building from source
-      # and died on a missing pg_config:
+      # Asked for by name rather than inherited. The runner's own python3 is
+      # whatever the machine happens to have - on this self-hosted runner that
+      # is 3.14, which has no psycopg2-binary wheel, so pip fell back to a
+      # source build and died on a missing pg_config:
       #
       #   Error: pg_config executable not found.
       #   ERROR: Failed to build 'psycopg2-binary'
       #
-      # 3.11 is also what backend/Dockerfile runs (python:3.11-slim), so the
-      # suite now exercises the interpreter production uses instead of
-      # whichever one the runner was last updated to.
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
+      # actions/setup-python cannot fix it here: it downloads Ubuntu builds,
+      # and this runner is not Ubuntu -
+      #   The version '3.11' with architecture 'x64' was not found
+      #
+      # 3.11 is what backend/Dockerfile runs (python:3.11-slim), so the suite
+      # exercises the interpreter production uses. If a runner does not have
+      # it, that is worth failing loudly for rather than quietly testing a
+      # different Python than we ship.
       - name: Set up Python venv
         run: |
-          python3 -m venv venv
+          PY="$(command -v python3.11 || true)"
+          if [ -z "$PY" ]; then
+            echo "::error title=No Python 3.11::This job needs python3.11 on PATH; production runs python:3.11-slim. Install it on the runner."
+            exit 1
+          fi
+          "$PY" --version
+          "$PY" -m venv venv
           echo "$PWD/venv/bin" >> $GITHUB_PATH
 
       - name: Install Backend Dependencies
@@ -233,24 +240,31 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Pinned rather than inherited. The runner's own python3 is whatever the
-      # machine happens to have - on the self-hosted runner that is 3.14, which
-      # has no psycopg2-binary wheel, so pip fell back to building from source
-      # and died on a missing pg_config:
+      # Asked for by name rather than inherited. The runner's own python3 is
+      # whatever the machine happens to have - on this self-hosted runner that
+      # is 3.14, which has no psycopg2-binary wheel, so pip fell back to a
+      # source build and died on a missing pg_config:
       #
       #   Error: pg_config executable not found.
       #   ERROR: Failed to build 'psycopg2-binary'
       #
-      # 3.11 is also what backend/Dockerfile runs (python:3.11-slim), so the
-      # suite now exercises the interpreter production uses instead of
-      # whichever one the runner was last updated to.
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
+      # actions/setup-python cannot fix it here: it downloads Ubuntu builds,
+      # and this runner is not Ubuntu -
+      #   The version '3.11' with architecture 'x64' was not found
+      #
+      # 3.11 is what backend/Dockerfile runs (python:3.11-slim), so the suite
+      # exercises the interpreter production uses. If a runner does not have
+      # it, that is worth failing loudly for rather than quietly testing a
+      # different Python than we ship.
       - name: Set up Python venv
         run: |
-          python3 -m venv venv
+          PY="$(command -v python3.11 || true)"
+          if [ -z "$PY" ]; then
+            echo "::error title=No Python 3.11::This job needs python3.11 on PATH; production runs python:3.11-slim. Install it on the runner."
+            exit 1
+          fi
+          "$PY" --version
+          "$PY" -m venv venv
           echo "$PWD/venv/bin" >> $GITHUB_PATH
 
       - name: Install Backend Dependencies
