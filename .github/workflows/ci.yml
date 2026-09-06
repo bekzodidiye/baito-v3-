@@ -12,7 +12,7 @@ jobs:
   # ==========================================================
   test-backend:
     name: 🐍 1. Backend Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, laptop-test-runner]
 
     # The suite used to run on SQLite while production runs PostgreSQL, so the
     # things that only Postgres does were never exercised: SELECT ... FOR UPDATE
@@ -106,7 +106,7 @@ jobs:
   # ==========================================================
   test-frontend:
     name: 🎨 2. Frontend Typecheck & Build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, laptop-test-runner]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -183,7 +183,7 @@ jobs:
   # ==========================================================
   test-e2e:
     name: 🎭 2b. End-to-End
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, laptop-test-runner]
 
     # Five Playwright specs sat in the repo and nothing ran them. Running them
     # for the first time found that two asserted a flow this app has never had,
@@ -305,7 +305,7 @@ jobs:
   validate-docker:
     name: 🐳 3. Docker Compose Validation
     needs: [test-backend, test-frontend, test-e2e]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, laptop-test-runner]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -374,7 +374,7 @@ jobs:
     name: ⏱️ 4b. Deploy Runner Watchdog
     needs: [test-backend, test-frontend, test-e2e, validate-docker]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, laptop-test-runner]
     permissions:
       actions: read
     timeout-minutes: 20
