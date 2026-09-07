@@ -8,6 +8,54 @@ on:
 
 jobs:
   # ==========================================================
+  # 0. RUNNER WATCHDOG
+  # ==========================================================
+  # Every job below wants a self-hosted runner, and a job nobody picks up does
+  # not fail - it waits, silently, for up to 24 hours. That happened twice in
+  # one day: the server runner crash-looped for a week without anyone noticing,
+  # and then the laptop runner died and three PRs sat queued.
+  #
+  # deploy already has a watchdog for exactly this. The tests need one too,
+  # because a PR that shows "pending" forever is indistinguishable from a slow
+  # PR, and neither sends anyone a notification.
+  #
+  # This job runs on the same label the tests do, so it is subject to the same
+  # shortage - which is the point. If it never starts, that is the same signal
+  # as it failing. What it catches is the case where SOME runner is alive but
+  # the test jobs are stuck behind something else for an unreasonable time.
+  runner-watchdog:
+    name: ⏱️ 0. Runner Watchdog
+    runs-on: [self-hosted, laptop-test-runner]
+    permissions:
+      actions: read
+    timeout-minutes: 25
+    steps:
+      - name: Report how long the test jobs waited
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WAIT_SECONDS: 1200
+        run: |
+          set -euo pipefail
+          deadline=$(( SECONDS + WAIT_SECONDS ))
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            queued=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs" \
+                       --jq '[.jobs[] | select(.name | test("Backend Tests|Typecheck|End-to-End")) | select(.status == "queued")] | length' \
+                     2>/dev/null || echo "")
+            if [ "${queued:-1}" = "0" ]; then
+              echo "✅ Every test job has been picked up."
+              exit 0
+            fi
+            echo "⏳ ${queued} test job(s) still queued after $SECONDS s..."
+            sleep 60
+          done
+
+          echo "::error title=Test jobs stuck in the queue::After ${WAIT_SECONDS}s \
+          some test jobs still have no runner. Check that a runner with the \
+          'laptop-test-runner' label is online: \
+          gh api repos/${GITHUB_REPOSITORY}/actions/runners"
+          exit 1
+
+  # ==========================================================
   # 1. BACKEND TESTS
   # ==========================================================
   test-backend:
