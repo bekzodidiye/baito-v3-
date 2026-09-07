@@ -323,10 +323,17 @@ jobs:
           echo "E2E_PHONE=$PHONE" >> "$GITHUB_ENV"
           echo "E2E_PASSWORD=$PASS" >> "$GITHUB_ENV"
 
+      # The pid is written down so the job can stop what it started. On a
+      # hosted runner nobody had to: the VM is destroyed when the job ends. On
+      # a self-hosted one the uvicorn process outlived every step, the runner
+      # would not close the job while it held the pipe, and the run sat
+      # "in_progress" with all steps green - once for over twenty minutes,
+      # until the process was killed by hand.
       - name: Start the API
         working-directory: ./backend
         run: |
           uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          echo "API_PID=$!" >> "$GITHUB_ENV"
           for i in $(seq 1 60); do
             curl -sf -o /dev/null http://127.0.0.1:8000/docs && exit 0
             sleep 1
@@ -364,6 +371,20 @@ jobs:
       - name: Run End-to-End Suite
         working-directory: ./frontend
         run: npm run test:e2e -- --project=chromium
+
+      # always(): a failing suite is exactly when the process is most likely to
+      # be left behind, and leaving it behind hangs the next run too.
+      - name: Stop the API
+        if: always()
+        run: |
+          if [ -n "${API_PID:-}" ] && kill -0 "$API_PID" 2>/dev/null; then
+            kill "$API_PID" || true
+            sleep 2
+            kill -9 "$API_PID" 2>/dev/null || true
+            echo "stopped API pid $API_PID"
+          else
+            echo "no API process to stop"
+          fi
 
       - name: Upload Report on Failure
         if: failure()
