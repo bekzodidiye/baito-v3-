@@ -4,6 +4,7 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 let rows: unknown[] = [];
+let loggedIn = true;
 const setUnreadNotificationsCount = vi.fn();
 const chime = vi.fn();
 
@@ -12,7 +13,7 @@ vi.mock('../../api/queries', () => ({
 }));
 vi.mock('../../context/AppContext', () => ({
   useApp: () => ({
-    isLoggedIn: true,
+    get isLoggedIn() { return loggedIn; },
     language: 'uz',
     setUnreadNotificationsCount,
   }),
@@ -40,6 +41,7 @@ const renderWatcher = () => {
 
 beforeEach(() => {
   rows = [];
+  loggedIn = true;
   setUnreadNotificationsCount.mockClear();
   chime.mockClear();
 });
@@ -98,5 +100,25 @@ describe('NotificationWatcher', () => {
     await new Promise(r => setTimeout(r, 40));
     expect(screen.queryByRole('status')).toBeNull();
     expect(chime).not.toHaveBeenCalled();
+  });
+
+  it('writes nothing to the store while logged out, however often it renders', async () => {
+    // The write itself was the loop: the store update re-rendered the
+    // provider, the provider re-rendered this, useQuery's inline [] default
+    // came back with a new identity, the effect fired again. Logged out — the
+    // landing page, and now the public invoice page — that never terminated.
+    loggedIn = false;
+    const { rerender } = renderWatcher();
+
+    for (let i = 0; i < 5; i++) {
+      rerender(
+        <QueryClientProvider client={client}>
+          <NotificationWatcher />
+        </QueryClientProvider>,
+      );
+    }
+    await waitFor(() => expect(document.body).toBeTruthy());
+
+    expect(setUnreadNotificationsCount).not.toHaveBeenCalled();
   });
 });

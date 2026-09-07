@@ -19,6 +19,13 @@ import { chime } from '../../utils/chime';
  *
  * Mounted once, at the app root, for the whole session.
  */
+
+/** One array, reused. A `[]` written inline as useQuery's default is a fresh
+ *  identity on every render, which re-fires the effect below on every render —
+ *  and the effect writes to the store, which re-renders the provider, which
+ *  renders this again. Logged out, that was an infinite loop that took the
+ *  whole app down, landing page included. */
+const NONE: any[] = [];
 export const NotificationWatcher: React.FC = () => {
   const { isLoggedIn, setUnreadNotificationsCount, language } = useApp();
   const { setCurrentScreen } = useCurrentScreen();
@@ -29,7 +36,7 @@ export const NotificationWatcher: React.FC = () => {
   const seen = useRef<Set<string> | null>(null);
   const hideAt = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data = [], isSuccess } = useQuery({
+  const { data, isSuccess } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
       const res = await fetchNotificationsApi();
@@ -42,10 +49,17 @@ export const NotificationWatcher: React.FC = () => {
     refetchOnWindowFocus: true,
   });
 
+  const items = data ?? NONE;
+
   useEffect(() => {
     if (!isLoggedIn) {
-      seen.current = null;
-      setUnreadNotificationsCount(0);
+      // Only when there was a session to clear. Writing 0 on every render of
+      // every logged-out visit is both pointless and, through the store, a
+      // re-render that brings us straight back here.
+      if (seen.current !== null) {
+        seen.current = null;
+        setUnreadNotificationsCount(0);
+      }
       return;
     }
     // useQuery hands back the [] default before the first request resolves.
@@ -53,17 +67,17 @@ export const NotificationWatcher: React.FC = () => {
     // notification would look new the moment the real list arrived.
     if (!isSuccess) return;
 
-    setUnreadNotificationsCount(data.filter((n: any) => !n.isRead).length);
+    setUnreadNotificationsCount(items.filter((n: any) => !n.isRead).length);
 
     if (seen.current === null) {
-      seen.current = new Set(data.map((n: any) => String(n.id)));
+      seen.current = new Set(items.map((n: any) => String(n.id)));
       return;
     }
 
-    const fresh = data.filter(
+    const fresh = items.filter(
       (n: any) => !n.isRead && !seen.current!.has(String(n.id)),
     );
-    data.forEach((n: any) => seen.current!.add(String(n.id)));
+    items.forEach((n: any) => seen.current!.add(String(n.id)));
     if (fresh.length === 0) return;
 
     const newest = fresh[0];
@@ -78,7 +92,7 @@ export const NotificationWatcher: React.FC = () => {
 
     if (hideAt.current) clearTimeout(hideAt.current);
     hideAt.current = setTimeout(() => setBanner(null), 6000);
-  }, [data, isSuccess, isLoggedIn, language, setUnreadNotificationsCount]);
+  }, [items, isSuccess, isLoggedIn, language, setUnreadNotificationsCount]);
 
   useEffect(() => () => { if (hideAt.current) clearTimeout(hideAt.current); }, []);
 
