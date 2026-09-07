@@ -345,9 +345,19 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      # `--with-deps` shells out to `sudo apt-get install` for the shared
+      # libraries Chromium needs. On a hosted Ubuntu runner that is free; on
+      # this self-hosted one it asks for a password nobody can type:
+      #
+      #   sudo: a terminal is required to read the password
+      #
+      # and the machine is not Debian-based anyway. OS packages on a
+      # self-hosted runner are the machine owner's to install, once, not
+      # something CI should re-acquire on every run. The browser download
+      # itself needs no privileges and is cached between runs.
       - name: Install Chromium
         working-directory: ./frontend
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       # playwright.config.ts builds the bundle and serves it with `vite preview`,
       # so this exercises what ships rather than the dev server.
