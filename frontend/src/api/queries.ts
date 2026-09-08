@@ -290,3 +290,4 @@ export const fetchJobDaysApi = async (jobId: string) => {
 export const completeJobDayApi = async (jobId: string, dayId: string) => {
   return await apiClient(`/jobs/${jobId}/days/${dayId}/complete`, { method: 'POST' });
 };
+
