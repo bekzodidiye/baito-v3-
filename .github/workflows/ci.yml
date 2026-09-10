@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Asked for by name rather than inherited. The runner's own python3 is
       # whatever the machine happens to have - on this self-hosted runner that
@@ -153,7 +153,7 @@ jobs:
     runs-on: [self-hosted, laptop-test-runner]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
 
 
@@ -262,7 +262,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Asked for by name rather than inherited. The runner's own python3 is
       # whatever the machine happens to have - on this self-hosted runner that
@@ -409,7 +409,7 @@ jobs:
     runs-on: [self-hosted, laptop-test-runner]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -543,7 +543,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: 📥 Checkout Code on Server
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🔄 Sync Workspace
         run: |
