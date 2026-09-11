@@ -529,7 +529,8 @@ jobs:
           # package.json holding the version is not visible from inside it.
           # Mirrors what the deploy hands compose.
           export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '')"
-          docker compose build
+          # Retried on network failures only - see the script's header.
+          bash scripts/docker-build.sh
 
       - name: 🧹 Drop the validation images
         if: always()
@@ -671,7 +672,12 @@ jobs:
           # Read it here and hand it to compose as a build arg.
           export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '')"
           echo "Building frontend as version '${APP_VERSION}'"
-          docker compose build
+          # A deploy of fd955ca died here because Alpine's package index could
+          # not be fetched - nothing was wrong with the Dockerfile, and the
+          # same build went through minutes later. The script retries that and
+          # only that: a package that genuinely does not exist still fails on
+          # the first attempt.
+          bash scripts/docker-build.sh
 
       - name: 🗄️ Apply Database Migrations
         working-directory: /home/scarygun/IntellexGroup/Baito
