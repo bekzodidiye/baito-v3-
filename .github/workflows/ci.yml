@@ -270,6 +270,10 @@ jobs:
     env:
       DATABASE_URL: postgresql://baito:baito@localhost:5434/baito_e2e
       REDIS_URL: redis://localhost:6381/8
+      # Off vite's 5173 default, which belongs to whoever is running
+      # `npm run dev` on this machine - the runner shares it. Same reason
+      # postgres and redis are on 5434 and 6381 above.
+      E2E_PORT: "5175"
       SECRET_KEY: ci_only_secret_key_0123456789abcdef0123456789
       ENVIRONMENT: development
       BCRYPT_ROUNDS: "4"
