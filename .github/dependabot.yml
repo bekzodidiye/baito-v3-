@@ -3,21 +3,23 @@
 
 version: 2
 updates:
-  # Root npm dependencies
+  # Root npm dependencies.
+  #
+  # This one entry covers the frontend too. The root package.json declares
+  # `workspaces: ["frontend"]`, so npm keeps a single lockfile at the root and
+  # `npm ci` inside frontend/ resolves up to it - frontend/package-lock.json is
+  # never read. A second entry on /frontend therefore updated
+  # frontend/package.json and a lockfile nothing consults, while the root lock
+  # kept the old resolutions, and `npm ci` refused the mismatch:
+  #
+  #   npm error Invalid: lock file's @playwright/test@1.62.1
+  #             does not satisfy @playwright/test@1.63.0
+  #
+  # Every /frontend-scoped PR was red for that reason and could never go green
+  # on its own. Dependabot understands workspaces: from here it updates the
+  # member manifest and the root lock together.
   - package-ecosystem: "npm"
     directory: "/"
-    schedule:
-      interval: "weekly"
-    groups:
-      dependencies:
-        dependency-type: "production"
-      devDependencies:
-        dependency-type: "development"
-    open-pull-requests-limit: 10
-
-  # Frontend React dependencies
-  - package-ecosystem: "npm"
-    directory: "/frontend"
     schedule:
       interval: "weekly"
     groups:
