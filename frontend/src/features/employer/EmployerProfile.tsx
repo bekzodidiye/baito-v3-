@@ -106,36 +106,8 @@ export const EmployerProfile: React.FC = () => {
             onEdit={() => setIsEditModalOpen(true)}
           />
 
-          {/* Toggle Role Widget */}
-          <motion.section 
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="bg-slate-900 text-white rounded-2xl p-4.5 border border-slate-800 shadow-sm flex flex-col gap-2.5 shrink-0"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[9px] font-black uppercase text-brand-primary tracking-widest">
-                  {language === 'uz' ? "FAOLIYAT TURI" : language === 'ru' ? "РЕЖИМ АККАУНТА" : "ACCOUNT MODE"}
-                </p>
-                <h3 className="font-display font-extrabold text-[11px] mt-0.5 text-slate-200 leading-snug">
-                  {language === 'uz' ? "Ish beruvchi rejimi faol. Xodim rejimiga o'tish:" : language === 'ru' ? "Режим работодателя активен. Перейти в режим работника:" : "Employer mode is active. Switch to worker mode:"}
-                </h3>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                if (userProfile) {
-                  setUserProfile({ ...userProfile, selectedRole: 'worker' });
-                  (
-                    language === 'uz' ? "Tizimga Xodim sifatida kirdingiz" : language === 'ru' ? "Вы вошли как Работник" : "You logged in as Worker"
-                  );
-                  setCurrentScreen('jobs');
-                }
-              }}
-              className="w-full py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl font-display font-black text-xs transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 shadow-sm"
-            >
-              {language === 'uz' ? "Xodim rejimiga o'tish" : language === 'ru' ? "Режим работника" : "Worker Mode"}
-            </button>
-          </motion.section>
+          {/* The account-mode switch used to sit here - see the note in the
+              worker profile. Removed from both sides. */}
 
           {/* Support and Logout */}
           <div className="flex flex-col gap-3 mt-2">
