@@ -9,6 +9,16 @@ name: Skylos Analysis
 permissions:
   contents: read
 
+# Whether a finding blocks a merge. Advisory to begin with: the gate reports
+# what it found and still exits 0, so the team sees the signal for a few weeks
+# before it can stop anyone. Set this to "false" to make it blocking - that is
+# the whole switch, and it is the only line that needs to change.
+#
+# This is separate from the workflow being enabled at all. Enabling a gate and
+# having it block on day one is how the last one ended up switched off.
+env:
+  SKYLOS_ADVISORY: "true"
+
 jobs:
   skylos:
     name: Skylos Quality Gate
@@ -65,7 +75,14 @@ jobs:
 
       - name: Quality Gate
         if: always()
-        run: skylos cicd gate --input skylos-results.json --summary
+        run: |
+          # In advisory mode the gate prints "Quality Gate: ADVISORY" with the
+          # counts and exits 0; without it the same findings exit 1.
+          advisory=""
+          if [ "${SKYLOS_ADVISORY}" = "true" ]; then
+            advisory="--advisory"
+          fi
+          skylos cicd gate --input skylos-results.json --summary $advisory
 
       - name: GitHub Annotations
         if: always()
