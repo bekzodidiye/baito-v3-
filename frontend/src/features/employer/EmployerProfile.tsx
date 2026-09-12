@@ -143,6 +143,12 @@ export const EmployerProfile: React.FC = () => {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-4">
+            {/* Balance tile parked with the rest of the balance flow - see the
+                note beside the /payments routes in components/AppRoutes.tsx.
+                Payment for a finished job is moving to invoice-and-receipt, so
+                an in-app balance would be a second, competing answer to "how do
+                I pay". */}
+            {/*
             <motion.button onClick={() => setCurrentScreen('payments')} 
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
               className="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col items-center sm:flex-row sm:justify-between gap-4 hover:shadow-md hover:border-brand-primary/20 transition-all cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
@@ -159,6 +165,7 @@ export const EmployerProfile: React.FC = () => {
                 </p>
               </div>
             </motion.button>
+            */}
 
             <motion.button onClick={() => setCurrentScreen("settings")}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
