@@ -85,6 +85,13 @@ def _serialise(p: JobPayout, job: models.Job | None = None, worker: User | None 
         "invoicePaidDeclaredAt": (
             p.invoicePaidDeclaredAt.isoformat() if p.invoicePaidDeclaredAt else None
         ),
+        # Their receipt for the transfer, and - separately - whether anyone has
+        # matched it against the bank statement yet. The list needs both: the
+        # first is what to look at, the second is whether it has been looked at.
+        "invoicePaidReceiptUrl": p.invoicePaidReceiptUrl,
+        "invoiceConfirmedAt": (
+            p.invoiceConfirmedAt.isoformat() if p.invoiceConfirmedAt else None
+        ),
     }
 
 
