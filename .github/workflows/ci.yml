@@ -356,6 +356,16 @@ jobs:
       - name: Start the API
         working-directory: ./backend
         run: |
+          # Refuse to start if the port is already taken. This is the check
+          # that actually holds: everything after uvicorn launches is a race
+          # against how long it takes to die, and a fixed sleep does not win
+          # that race reliably - measured, not assumed.
+          if ss -ltn "sport = :${E2E_API_PORT}" 2>/dev/null | grep -q LISTEN; then
+            echo "::error title=Port already in use::Something is already listening on ${E2E_API_PORT}. uvicorn would fail to bind, and the health check below would be answered by that other process - which is how a suite once signed in against a stranger's database and reported the password wrong." >&2
+            ss -ltnp "sport = :${E2E_API_PORT}" 2>/dev/null >&2 || true
+            exit 1
+          fi
+
           uvicorn app.main:app --host 127.0.0.1 --port "$E2E_API_PORT" &
           API_PID=$!
           echo "API_PID=$API_PID" >> "$GITHUB_ENV"
