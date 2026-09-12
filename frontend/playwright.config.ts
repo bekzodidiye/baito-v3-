@@ -42,8 +42,12 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://localhost:5173',
+    /* Base URL to use in actions like `await page.goto('')`. Must track the
+       webServer port below. When it did not, the suite started a preview on
+       its own port and then drove the browser at 5173 anyway - straight into
+       whatever dev server happened to be running - and reported 14 passes
+       against it before one test disagreed. */
+    baseURL: `http://localhost:${E2E_PORT}`,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
