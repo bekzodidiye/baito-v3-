@@ -303,7 +303,9 @@ def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None
                     fee_percent: int = 0) -> tuple[str, str]:
     """The invoice, as text and as HTML. Same content both ways."""
     company = (employer.companyName if employer and employer.companyName else job.company) or "—"
-    money = lambda n: f"{n:,}".replace(",", " ")
+    def money(n: int) -> str:
+        return f"{n:,}".replace(",", " ")
+
     amount = money(payout.invoiceAmount)
 
     rows = [
