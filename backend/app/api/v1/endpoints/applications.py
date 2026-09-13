@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app import crud, models
 from app.api import deps
 from app.core.money import parse_salary_amounts, salary_to_uzs
-from app.services.escrow_service import PLATFORM_FEE_PERCENT
+from app.services.escrow_service import fee_for, platform_fee_percent
 from app.models.job import JobStatus
 from app.services.escrow_service import EscrowService
 from app.services import job_days
@@ -65,6 +65,29 @@ def get_worker_applications(
     jobs = db.query(models.Job).filter(models.Job.id.in_(job_ids)).all()
     job_map = {j.id: j for j in jobs}
 
+    # The commission that actually applies to each of these jobs. A hold carries
+    # the rate it was taken under, so a job hired before an administrator
+    # changed the rate keeps quoting the figure the worker agreed to. One query
+    # for the lot rather than one per application.
+    holds = (
+        db.query(models.Transaction)
+        .filter(
+            models.Transaction.jobId.in_(job_ids),
+            models.Transaction.type == "escrow_hold",
+        )
+        .all()
+    ) if job_ids else []
+    # Released holds carry the fee that was actually taken; that is the number
+    # the worker's balance moved by, and it wins over any recomputation.
+    fee_taken: dict[str, int] = {}
+    rate_agreed: dict[str, int] = {}
+    for h in holds:
+        if h.status == "released" and h.platformFee:
+            fee_taken[h.jobId] = fee_taken.get(h.jobId, 0) + (h.platformFee // 100)
+        if h.feePercent is not None:
+            rate_agreed.setdefault(h.jobId, h.feePercent)
+    current_rate = platform_fee_percent(db)
+
     result = []
     for app in apps:
         job = job_map.get(app.jobId)
@@ -79,7 +102,17 @@ def get_worker_applications(
         # the bonus is paid in full on top; reporting the gross wage overstated
         # every completed job by the fee, and the Reviews screen sums this
         # field into a lifetime total, so the gap compounded.
-        net_wage = base_salary - int(base_salary * (PLATFORM_FEE_PERCENT / 100.0))
+        #
+        # Three sources, in order of how much they are worth: the fee actually
+        # deducted, then the rate this job was hired under, then today's rate
+        # for a job nobody has been hired for yet. The last of the three used to
+        # be a hard-coded 10 for all of them.
+        if job.id in fee_taken:
+            net_wage = base_salary - fee_taken[job.id]
+        else:
+            net_wage = base_salary - fee_for(
+                base_salary, rate_agreed.get(job.id, current_rate)
+            )
 
         result.append({
             "id": app.id,
