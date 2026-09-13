@@ -38,9 +38,30 @@ def platform_fee_percent(db: Session) -> int:
 
 
 def fee_for(amount_uzs: int, percent: int) -> int:
-    """The commission on an amount, rounded down so the worker never loses a
-    whole so'm to rounding that the platform then keeps."""
+    """The commission on a wage, rounded down.
+
+    The employer pays this on top of the wage — the worker is paid the figure
+    the posting advertised, in full.
+    """
     return int(amount_uzs * (percent / 100.0))
+
+
+def worker_share(tx, db: Session) -> int:
+    """What a hold owes the worker, in so'm.
+
+    Holds taken since the commission moved onto the employer's side carry the
+    fee in ``platformFee`` and were funded for wage + fee, so the whole of
+    ``amount`` belongs to the worker. Older holds froze the wage alone and the
+    fee came out of it; those are honoured on the terms they were made under
+    rather than retroactively repriced.
+    """
+    total = tx.amount // 100
+    if tx.feePercent is not None:
+        return total
+    if tx.platformFee:
+        # A legacy hold that has already been released records what was taken.
+        return total - tx.platformFee // 100
+    return total - fee_for(total, platform_fee_percent(db))
 
 class EscrowService:
     """Escrow vault for the marketplace.
@@ -57,14 +78,22 @@ class EscrowService:
     @staticmethod
     def hold_funds(db: Session, employer_id: str, job_id: str, amount_uzs: int,
                    job_day_id: str | None = None) -> Transaction:
+        # The commission is the employer's, not a deduction from the wage: the
+        # worker is paid what the posting advertised, and the platform's cut is
+        # charged on top of it. So what leaves the employer's balance here is
+        # wage + fee, and both halves are frozen together.
+        percent = platform_fee_percent(db)
+        fee_uzs = fee_for(amount_uzs, percent)
+        total_uzs = amount_uzs + fee_uzs
+
         employer = (db.query(models.User).filter(models.User.id == employer_id)
                     .populate_existing()
                     .with_for_update().first())
-        if not employer or (employer.balance or 0) < amount_uzs:
+        if not employer or (employer.balance or 0) < total_uzs:
             raise HTTPException(status_code=400, detail="Ish beruvchi balansida yetarli mablag' mavjud emas (Escrow HOLD)")
 
         # Deduct and freeze
-        employer.balance = (employer.balance or 0) - amount_uzs
+        employer.balance = (employer.balance or 0) - total_uzs
         db.add(employer)
 
         tx = Transaction(
@@ -75,10 +104,14 @@ class EscrowService:
             # before days existed, which still has a single hold for the lot.
             jobDayId=job_day_id,
             employerId=employer.id,
+            # The wage alone. All of it is the worker's — the fee sits beside it
+            # rather than inside it, so nothing has to be unpicked at payout.
             amount=amount_uzs * 100,
-            # Pinned here, not read again at payout: the worker was quoted a net
-            # wage against this rate when they applied.
-            feePercent=platform_fee_percent(db),
+            platformFee=fee_uzs * 100,
+            # Pinned here, not read again at payout: this is the rate the
+            # employer was charged under, and a later change to the setting must
+            # not reach back into money already frozen.
+            feePercent=percent,
             type="escrow_hold",
             status="held"
         )
@@ -87,12 +120,16 @@ class EscrowService:
         # Audit ledger record
         ledger = AuditLedger(
             userId=employer.id,
-            amountDelta=-amount_uzs,
+            amountDelta=-total_uzs,
             balanceAfter=employer.balance,
             entryType="escrow_hold",
             referenceType="job",
             referenceId=job_id,
-            description=f"Ish e'loni uchun mablag' muzlatildi ({amount_uzs} so'm)"
+            description=(
+                f"Ish e'loni uchun mablag' muzlatildi ({amount_uzs} so'm ish haqi"
+                + (f" + {fee_uzs} so'm xizmat haqi" if fee_uzs else "")
+                + ")"
+            ),
         )
         db.add(ledger)
         db.flush()
@@ -127,11 +164,15 @@ class EscrowService:
             raise HTTPException(status_code=404, detail="Ushbu ish uchun muzlatilgan mablag' topilmadi")
 
         total_amount = tx.amount // 100 # convert tiyin to UZS
-        # The rate this hold was taken under. Older holds carry none, and for
-        # those the current setting is what they would have used anyway.
-        percent = tx.feePercent if tx.feePercent is not None else platform_fee_percent(db)
-        platform_fee = fee_for(total_amount, percent)
-        worker_payout = total_amount - platform_fee
+        # The employer was charged the commission on top of the wage when this
+        # was frozen, so the wage passes to the worker whole and the fee is
+        # already recorded. A hold with no rate on it predates that and was
+        # funded for the wage alone; it is settled the old way rather than
+        # paying out money nobody deposited.
+        worker_payout = worker_share(tx, db)
+        if tx.feePercent is None:
+            platform_fee = total_amount - worker_payout
+            tx.platformFee = platform_fee * 100
 
         worker = db.query(models.User).filter(models.User.id == worker_id).populate_existing().with_for_update().first()
         if not worker:
@@ -146,10 +187,11 @@ class EscrowService:
             worker.completedJobsCount = (worker.completedJobsCount or 0) + 1
         db.add(worker)
 
-        # Update escrow tx
+        # Update escrow tx. platformFee is not written here: a hold taken under
+        # the current rules recorded it when the money was frozen, and a legacy
+        # one has had it set just above.
         tx.status = "released"
         tx.workerId = worker.id
-        tx.platformFee = platform_fee * 100
         db.add(tx)
 
         # Ledger for worker
@@ -259,7 +301,11 @@ class EscrowService:
         # one day's money actually arrived.
         employers: dict[str, models.User] = {}
         for tx in holds:
-            refund_amount = tx.amount // 100
+            # Wage and commission both left the employer's balance when this was
+            # frozen, so both come back. A legacy hold carries no fee at this
+            # point — platformFee is only written when it is released — so the
+            # same sum is right for those too.
+            refund_amount = (tx.amount + (tx.platformFee or 0)) // 100
             employer = employers.get(tx.employerId)
             if employer is None:
                 employer = db.query(models.User).filter(
