@@ -28,7 +28,7 @@ jobs:
   # ==========================================================
   test-backend:
     name: 🐍 1. Backend Tests
-    runs-on: [self-hosted, baito-server]
+    runs-on: [self-hosted, laptop-test-runner]
 
     # The suite used to run on SQLite while production runs PostgreSQL, so the
     # things that only Postgres does were never exercised: SELECT ... FOR UPDATE
@@ -165,7 +165,7 @@ jobs:
   # ==========================================================
   test-frontend:
     name: 🎨 2. Frontend Typecheck & Build
-    runs-on: [self-hosted, baito-server]
+    runs-on: [self-hosted, laptop-test-runner]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -237,7 +237,7 @@ jobs:
   # ==========================================================
   test-e2e:
     name: 🎭 2b. End-to-End
-    runs-on: [self-hosted, baito-server]
+    runs-on: [self-hosted, laptop-test-runner]
 
     # Five Playwright specs sat in the repo and nothing ran them. Running them
     # for the first time found that two asserted a flow this app has never had,
@@ -465,6 +465,13 @@ jobs:
   # ==========================================================
   # 3. DOCKER ARCHITECTURE VALIDATION
   # ==========================================================
+  # On baito-server rather than the laptop. These two are the memory-hungry
+  # half of the pipeline and they need nothing but Docker, which the server
+  # obviously has — it is what production runs on. The three test jobs above
+  # need python3.11 and Node on the runner's PATH, and the server has neither,
+  # so they stay put until it does. Nothing here touches production: the build
+  # tags ci-<sha>, which cannot collide with `current`, and drops only those
+  # tags; validate-docker renders the compose file and starts nothing.
   validate-docker:
     name: 🐳 3. Docker Compose Validation
     needs: [test-backend, test-frontend, test-e2e]
