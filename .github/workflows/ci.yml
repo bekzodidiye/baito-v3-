@@ -28,7 +28,7 @@ jobs:
   # ==========================================================
   test-backend:
     name: 🐍 1. Backend Tests
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-server]
 
     # The suite used to run on SQLite while production runs PostgreSQL, so the
     # things that only Postgres does were never exercised: SELECT ... FOR UPDATE
@@ -165,7 +165,7 @@ jobs:
   # ==========================================================
   test-frontend:
     name: 🎨 2. Frontend Typecheck & Build
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-server]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -237,7 +237,7 @@ jobs:
   # ==========================================================
   test-e2e:
     name: 🎭 2b. End-to-End
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-server]
 
     # Five Playwright specs sat in the repo and nothing ran them. Running them
     # for the first time found that two asserted a flow this app has never had,
@@ -468,7 +468,7 @@ jobs:
   validate-docker:
     name: 🐳 3. Docker Compose Validation
     needs: [test-backend, test-frontend, test-e2e]
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-server]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -544,7 +544,7 @@ jobs:
     # validate-docker already gates on the three test jobs.
     needs: [validate-docker]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-server]
     # Cold builds are slow but not unbounded; this is the alarm for a build
     # that has stopped making progress rather than a target to aim at.
     timeout-minutes: 40
@@ -609,6 +609,10 @@ jobs:
     name: ⏱️ 4b. Deploy Runner Watchdog
     needs: [test-backend, test-frontend, test-e2e, validate-docker, build-images]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # The one job deliberately left on the laptop. Everything else moved to
+    # baito-server, but this is the alarm for "the deploy runner is not picking
+    # jobs up" — put it on the runner it watches and it sits in the same queue,
+    # silent, exactly when it is needed. It polls an API; it needs no memory.
     runs-on: [self-hosted, laptop-test-runner]
     permissions:
       actions: read
