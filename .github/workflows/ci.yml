@@ -165,7 +165,14 @@ jobs:
   # ==========================================================
   test-frontend:
     name: 🎨 2. Frontend Typecheck & Build
-    runs-on: [self-hosted, laptop-test-runner]
+    # On the server rather than the laptop: this job needs Node and nothing
+    # else, and the server carries v24 on /usr/bin — reachable even from an
+    # empty environment, which is what the runner service starts from.
+    #
+    # The two jobs still on the laptop need python3.11 specifically, because
+    # that is what backend/Dockerfile ships (python:3.11-slim) and the suite is
+    # meant to exercise the interpreter production runs. The server has 3.14.
+    runs-on: [self-hosted, baito-server]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
