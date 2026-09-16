@@ -36,12 +36,15 @@ def _reject_control_chars(v):
 
 
 def _validate_salary(v: str) -> str:
+    v = v.strip()
+    if not v or len(v) > 100:
+        raise ValueError("Maosh 1-100 belgi bo'lishi kerak")
     if "-" in v and not any(c.isdigit() for c in v.split("-")[0]):
         # A leading minus: "-500000". The parser strips it and the employer
         # is charged the absolute value.
         raise ValueError("Maosh manfiy bo'lishi mumkin emas")
     written = parse_salary_amounts(v, bounded=False)
-    if written and max(written) <= 0:
+    if written and min(written) <= 0:
         # "kelishilgan holda" carries no figure and stays allowed. Only a
         # figure that is actually there and not positive is refused.
         raise ValueError("Maosh musbat bo'lishi kerak")

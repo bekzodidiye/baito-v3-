@@ -144,6 +144,7 @@ export const uz = {
   jobNotSelected: "Ish tanlanmagan",
   selectJobDetails: "Batafsil ma'lumot olish uchun ro'yxatdan biror ishni tanlang.",
   jobsLoading: "Yangi ishlar yuklanmoqda...",
+  mapLoading: "Xarita yuklanmoqda...",
   noJobsInArea: "{location} bo'ylab ishlar topilmadi",
   jobsFoundInArea: "{location} bo'ylab {count} ta ish topildi",
   noJobsUzbekistan: "O'zbekiston bo'ylab ishlar topilmadi",

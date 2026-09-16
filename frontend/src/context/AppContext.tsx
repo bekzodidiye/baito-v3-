@@ -38,7 +38,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           else navigate(`/${targetScreen}`);
         }
       });
-      navigate('/');
+      navigate('/login');
       return false;
     }
 

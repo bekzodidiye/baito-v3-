@@ -86,7 +86,13 @@ class MockRedis:
 
 def _build_client():
     try:
-        client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+        client = redis.from_url(
+            settings.REDIS_URL,
+            decode_responses=True,
+            socket_connect_timeout=2,
+            socket_timeout=2,
+            retry_on_timeout=False,
+        )
         client.ping()
         return client
     except Exception as e:

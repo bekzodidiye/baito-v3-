@@ -147,10 +147,17 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(api_router, prefix="/api")
 
 
+@app.get("/api/live")
+@app.get("/api/v1/live")
+def liveness_check():
+    """Process health only; dependency outages must not trigger restart loops."""
+    return {"status": "ok", "version": settings.VERSION}
+
+
 @app.get("/api/health")
 @app.get("/api/v1/health")
 def health_check(response: Response):
-    """Liveness/readiness probe.
+    """Readiness probe; both persistent storage and shared Redis are required.
 
     Failure details are logged, never returned — the old version echoed the
     raw driver exception, which includes the database connection string.
@@ -184,6 +191,7 @@ def health_check(response: Response):
         health_status["redis"] = "unavailable (in-memory fallback)"
         if health_status["status"] == "ok":
             health_status["status"] = "degraded"
+        response.status_code = 503
     else:
         try:
             redis_client.ping()
@@ -193,5 +201,6 @@ def health_check(response: Response):
             health_status["redis"] = "unhealthy"
             if health_status["status"] == "ok":
                 health_status["status"] = "degraded"
+            response.status_code = 503
 
     return health_status

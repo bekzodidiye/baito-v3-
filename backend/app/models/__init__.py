@@ -1,4 +1,5 @@
 from .user import User
+from .privacy_consent import PrivacyConsent
 from .job import Job, JobStatus
 from .media_file import MediaFile, MediaVisibility
 from .application import Application

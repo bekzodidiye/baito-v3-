@@ -8,6 +8,7 @@ interface AdminHeaderProps {
   onRefresh: () => void;
   loading: boolean;
   onOpenSidebar: () => void;
+  sidebarOpen?: boolean;
 }
 
 export const AdminHeader: React.FC<AdminHeaderProps> = ({
@@ -15,6 +16,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   onRefresh,
   loading,
   onOpenSidebar,
+  sidebarOpen = false,
 }) => {
   const { language, setLanguage } = useApp();
 
@@ -69,9 +71,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
       <div className="px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={onOpenSidebar}
-            className="p-2 -ml-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl md:hidden cursor-pointer"
-            title="Menu"
+            className="min-w-11 min-h-11 flex items-center justify-center -ml-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl md:hidden cursor-pointer focus-visible:outline-2 focus-visible:outline-brand-primary"
+            aria-label={language === 'ru' ? 'Открыть меню' : language === 'en' ? 'Open menu' : 'Menyuni ochish'}
+            aria-expanded={sidebarOpen}
+            aria-controls="admin-navigation"
           >
             <Menu size={22} />
           </button>
@@ -90,9 +95,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           <div className="flex items-center gap-1.5 bg-slate-100/80 p-1 px-2 rounded-xl border border-slate-200/80">
             <Globe size={14} className="text-slate-500 shrink-0" />
             <select
+              aria-label={language === 'ru' ? 'Язык' : language === 'en' ? 'Language' : 'Til'}
               value={language}
               onChange={(e) => setLanguage(e.target.value as 'uz' | 'ru' | 'en')}
-              className="bg-transparent font-extrabold text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 cursor-pointer"
+              className="min-h-11 bg-transparent font-extrabold text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 cursor-pointer"
             >
               <option value="uz">UZ</option>
               <option value="ru">RU</option>
@@ -106,9 +112,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           </div>
 
           <button
+            type="button"
+            aria-label={language === 'ru' ? 'Обновить' : language === 'en' ? 'Refresh' : 'Yangilash'}
             onClick={onRefresh}
             disabled={loading}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-2xs"
+            className="flex min-h-11 min-w-11 items-center justify-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-2xs focus-visible:outline-2 focus-visible:outline-brand-primary"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin text-blue-600' : ''} />
             <span className="hidden sm:inline">{language === 'ru' ? 'Обновить' : language === 'en' ? 'Refresh' : 'Yangilash'}</span>

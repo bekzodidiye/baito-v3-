@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { SettingsLayout } from './settings/SettingsLayout';
+import { ProtectedRoute } from './ProtectedRoute';
 
 const LandingScreen = React.lazy(() => import('./landing/LandingScreen').then(m => ({ default: m.LandingScreen })));
 const JobSearchScreen = React.lazy(() => import('../features/worker/search/JobSearchScreen').then(m => ({ default: m.JobSearchScreen })));
@@ -39,27 +40,6 @@ const SuspenseFallback = () => (
 );
 
 import { useApp } from '../context/AppContext';
-
-const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
-  const { isLoggedIn, userProfile } = useApp();
-  
-  if (!isLoggedIn) return <Navigate to="/login" replace />;
-  
-  if (isLoggedIn && !userProfile) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-8 min-h-screen bg-slate-50 dark:bg-slate-900">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (allowedRoles && !allowedRoles.includes(userProfile?.selectedRole || 'worker')) {
-    if (userProfile?.selectedRole === 'employer') return <Navigate to="/employer-dashboard" replace />;
-    if (userProfile?.selectedRole === 'admin') return <Navigate to="/admin" replace />;
-    return <Navigate to="/jobs" replace />;
-  }
-  return <>{children}</>;
-};
 
 const AuthGuestRoute = ({ mode }: { mode: 'login' | 'register' }) => {
   const { isLoggedIn, userProfile } = useApp();
@@ -121,8 +101,8 @@ export const AppRoutes = () => {
             who usually has no account here. The signed token in the path is
             the credential, and it is worth exactly one invoice. */}
         <Route path="/invoice/:token" element={<InvoicePayScreen />} />
-        <Route path="/payments/success" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
-        <Route path="/payments/error" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
+        <Route path="/payments/success" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><PaymentResult /></ProtectedRoute>} />
+        <Route path="/payments/error" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><PaymentResult /></ProtectedRoute>} />
         <Route path="/taxes" element={<ProtectedRoute allowedRoles={['worker']}><TaxesScreen /></ProtectedRoute>} />
         <Route path="/verification" element={<ProtectedRoute><VerificationPendingScreen /></ProtectedRoute>} />
         <Route path="/login" element={<AuthGuestRoute mode="login" />} />

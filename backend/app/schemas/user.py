@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 
 from app.core.config import settings
+from app.schemas.privacy_consent import ConsentAccept
 
 # bcrypt silently truncates at 72 bytes, so anything longer is a false sense
 # of security rather than extra strength — reject it instead.
@@ -34,6 +35,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+    consent: ConsentAccept
     uid: Optional[str] = None
     password: str
     name: str = Field(min_length=1, max_length=120)

@@ -8,6 +8,7 @@ import hashlib
 import hmac
 
 from app.core.config import settings
+from app.core.privacy import PRIVACY_POLICY_VERSION
 from app.db.session import SessionLocal
 from app.models import Transaction, User
 
@@ -19,6 +20,7 @@ from .conftest import TEST_PASSWORD, login, make_job, make_user
 def test_registration_without_sms_verification_is_rejected(client):
     """POST /users used to accept any phone number outright."""
     resp = client.post("/api/v1/users", json={
+        "consent": {"accepted": True, "policy_version": PRIVACY_POLICY_VERSION},
         "name": "Yangi Ishchi",
         "phone": "+998901234599",
         "password": TEST_PASSWORD,
@@ -40,6 +42,7 @@ def test_registration_succeeds_after_sms_verification(client):
     token = verify.json()["verification_token"]
 
     resp = client.post("/api/v1/users", json={
+        "consent": {"accepted": True, "policy_version": PRIVACY_POLICY_VERSION},
         "name": "Yangi Ishchi",
         "phone": phone,
         "password": TEST_PASSWORD,
@@ -58,12 +61,14 @@ def test_verification_grant_is_single_use(client):
     ).json()["verification_token"]
 
     first = client.post("/api/v1/users", json={
+        "consent": {"accepted": True, "policy_version": PRIVACY_POLICY_VERSION},
         "name": "A", "phone": phone, "password": TEST_PASSWORD,
         "role": "worker", "verification_token": token,
     })
     assert first.status_code == 200
 
     second = client.post("/api/v1/users", json={
+        "consent": {"accepted": True, "policy_version": PRIVACY_POLICY_VERSION},
         "name": "B", "phone": "+998901234577", "password": TEST_PASSWORD,
         "role": "worker", "verification_token": token,
     })
@@ -87,6 +92,7 @@ def test_public_registration_cannot_grant_admin(client):
     ).json()["verification_token"]
 
     resp = client.post("/api/v1/users", json={
+        "consent": {"accepted": True, "policy_version": PRIVACY_POLICY_VERSION},
         "name": "Bosqinchi", "phone": phone, "password": TEST_PASSWORD,
         "role": "admin", "verification_token": token,
     })
@@ -105,6 +111,7 @@ def test_weak_passwords_are_refused(client):
 
     for weak in ("a", "1234567", "password", "12345678"):
         resp = client.post("/api/v1/users", json={
+            "consent": {"accepted": True, "policy_version": PRIVACY_POLICY_VERSION},
             "name": "X", "phone": phone, "password": weak,
             "role": "worker", "verification_token": token,
         })
