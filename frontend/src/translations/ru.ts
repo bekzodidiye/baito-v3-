@@ -144,6 +144,7 @@ export const ru = {
   jobNotSelected: "Работа не выбрана",
   selectJobDetails: "Выберите работу из списка, чтобы просмотреть подробную информацию.",
   jobsLoading: "Загрузка новых вакансий...",
+  mapLoading: "Загрузка карты...",
   noJobsInArea: "В регионе {location} вакансий не найдено",
   jobsFoundInArea: "Найдено {count} вакансий в регионе {location}",
   noJobsUzbekistan: "По всему Узбекистану вакансий не найдено",

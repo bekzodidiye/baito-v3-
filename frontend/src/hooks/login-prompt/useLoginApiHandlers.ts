@@ -4,9 +4,13 @@ import { apiClient } from '../../api/client';
 import { LOCAL_TEXTS } from '../../components/login/LoginPromptScreen.translations';
 import { showToast } from '../../utils/toast';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { PRIVACY_POLICY_VERSION } from '../../api/privacy';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () => void) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { language, setIsLoggedIn, setUserProfile, executePendingRedirect } = useApp();
   const t = LOCAL_TEXTS[language as 'uz' | 'ru' | 'en'] || LOCAL_TEXTS.uz;
 
@@ -63,6 +67,7 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
         phone: state.regPhone,
         role,
         verification_token: verification?.verification_token,
+        consent: { accepted: true, policy_version: PRIVACY_POLICY_VERSION },
       };
 
       await registerApi(payload);
@@ -216,6 +221,11 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
       else {
         const redirected = executePendingRedirect();
         if (!redirected) {
+          const from = location.state?.from;
+          if (typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') && !/^\/(login|register)([/?#]|$)/.test(from)) {
+            navigate(from, { replace: true });
+            return;
+          }
           if (profile.selectedRole === 'admin') setCurrentScreen('admin');
           else if (profile.selectedRole === 'employer') setCurrentScreen('employer-dashboard');
           else setCurrentScreen('jobs');

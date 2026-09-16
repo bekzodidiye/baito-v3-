@@ -84,6 +84,8 @@ def create_user(
         companyName=user_in.companyName,
     )
     db.add(db_obj)
+    db.flush()
+    db.add(models.PrivacyConsent(user_id=db_obj.id, policy_version=user_in.consent.policy_version, source="registration"))
     db.commit()
     db.refresh(db_obj)
     return db_obj

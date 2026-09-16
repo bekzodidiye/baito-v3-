@@ -62,9 +62,6 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
               </span>
             )}
           </p>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {language === 'uz' ? "Amir Temur shoh ko'chasi, 120" : language === 'ru' ? "Проспект Амира Темура, 120" : "Amir Temur Avenue, 120"}
-          </p>
         </div>
       </div>
 
@@ -72,6 +69,10 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
       <div className="w-full h-48 rounded-xl overflow-hidden border border-slate-200 relative shadow-xs bg-slate-100">
         <iframe
           title={`map-preview-${selectedJob.id}`}
+          aria-hidden="true"
+          tabIndex={-1}
+          loading="lazy"
+          inert
           className="w-full h-full border-0 pointer-events-none opacity-90"
           src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${coords.lat}%2C${coords.lng}`}
         />

@@ -8,6 +8,8 @@ import { LanguageSelector } from './LanguageSelector';
 import { DrawerMenuItem } from './DrawerMenuItem';
 import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useModalFocus } from '../hooks/useModalFocus';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 interface DrawerProps {
   onOpenModal: (type: 'profile' | 'settings' | 'help' | 'auth') => void;
@@ -19,6 +21,9 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
   const isAdmin = isLoggedIn && userProfile?.selectedRole === 'admin';
+  const drawerRef = React.useRef<HTMLElement>(null);
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  useModalFocus(drawerRef, drawerOpen && !isDesktop, () => setDrawerOpen(false));
 
   const handleMeningArizalarim = () => {
     setCurrentScreen('calendar');
@@ -145,10 +150,12 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
 
   return (
     <AnimatePresence>
-      {drawerOpen && (
+      {drawerOpen && !isDesktop && (
         <aside className="fixed inset-0 z-[5000] md:hidden flex">
           {/* Overlay backdrop */}
           <motion.div
+            data-modal-backdrop
+            aria-hidden="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -159,6 +166,11 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
 
           {/* Drawer content */}
           <motion.nav
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={language === 'ru' ? 'Главное меню' : language === 'en' ? 'Main menu' : 'Asosiy menyu'}
+            tabIndex={-1}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
@@ -172,8 +184,10 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
                 <div className="flex items-center gap-1.5">
                   <LanguageSelector align="right" />
                   <button
+                    data-modal-autofocus
+                    aria-label={language === 'ru' ? 'Закрыть меню' : language === 'en' ? 'Close menu' : 'Menyuni yopish'}
                     onClick={() => setDrawerOpen(false)}
-                    className="p-1.5 rounded-full hover:bg-slate-200/65 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer border-0 bg-transparent active:scale-95"
+                    className="min-w-11 min-h-11 flex items-center justify-center rounded-full hover:bg-slate-200/65 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border-0 bg-transparent active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
                     type="button"
                   >
                     <X size={18} className="stroke-[2.5]" />
@@ -200,4 +214,3 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
     </AnimatePresence>
   );
 };
-

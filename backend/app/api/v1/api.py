@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     media,
     notifications,
     payments,
+    privacy_consent,
     support,
     upload,
     uzum_merchant,
@@ -21,6 +22,7 @@ from app.api.v1.endpoints import (
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
+api_router.include_router(privacy_consent.router, prefix="/users", tags=["privacy"])
 api_router.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 # The category and region lists. Readable without being an administrator —
 # the posting form needs them and an employer is not one.

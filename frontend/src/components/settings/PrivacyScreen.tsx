@@ -4,6 +4,8 @@ import { translations } from '../../translations';
 import { ChevronDown, Check, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatLongDate } from '../../utils/dateFormat';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { acceptConsent, getConsent, PRIVACY_POLICY_VERSION } from '../../api/privacy';
 
 const SECTIONS = [
   {
@@ -126,7 +128,7 @@ const SECTIONS = [
           <li>Shikoyat bilan nazorat organiga murojaat qilish huquqi</li>
         </ul>
         <div className="bg-brand-primary-light/20 border-l-4 border-brand-primary p-3 rounded-r-md text-[13px] text-brand-text-variant">
-          Huquqlaringizdan foydalanish uchun: <strong className="text-brand-primary">support@timee-uzb.uz</strong> — 30 kun ichida javob beramiz.
+          Huquqlaringizdan foydalanish uchun: <a href="mailto:support@baito.uz" className="text-brand-primary underline">support@baito.uz</a> — 30 kun ichida javob beramiz.
         </div>
       </>
     )
@@ -186,8 +188,7 @@ const SECTIONS = [
     title: "Aloqa va shikoyatlar",
     content: (
       <ul className="list-disc pl-5 mb-1 text-[14px] text-brand-text-variant space-y-1">
-        <li>Elektron pochta: <a href="mailto:support@timee-uzb.uz" className="text-brand-primary underline">support@timee-uzb.uz</a></li>
-        <li>Telegram: <a href="https://t.me/timee_uzb_support" className="text-brand-primary underline">@timee_uzb_support</a></li>
+        <li>Elektron pochta: <a href="mailto:support@baito.uz" className="text-brand-primary underline">support@baito.uz</a></li>
         <li>Javob vaqti: ish kunlarida 24 soat ichida</li>
       </ul>
     )
@@ -200,17 +201,25 @@ interface PrivacyScreenProps {
 }
 
 export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm }) => {
-  const { language } = useApp();
+  const { language, isLoggedIn, userProfile } = useApp();
   const t = translations[language];
   const navigate = useNavigate();
   
   const [openSection, setOpenSection] = useState<number | null>(null);
   const [readSections, setReadSections] = useState<Set<number>>(new Set());
   const [consentChecks, setConsentChecks] = useState<Record<string, boolean>>({});
-  const [isSuccess, setIsSuccess] = useState(() => {
-    if (onConfirm) return false;
-    return localStorage.getItem('baito_privacy_consent') === 'true';
+  const queryClient = useQueryClient();
+  const consentKey = ['privacy-consent', userProfile?.id];
+  const receipt = useQuery({
+    queryKey: consentKey,
+    queryFn: getConsent,
+    enabled: isLoggedIn && !!userProfile?.id && !onConfirm,
   });
+  const saveConsent = useMutation({
+    mutationFn: acceptConsent,
+    onSuccess: (data) => queryClient.setQueryData(consentKey, data),
+  });
+  const isCurrentConsent = !onConfirm && receipt.data?.policy_version === PRIVACY_POLICY_VERSION;
 
   const toggleSection = (idx: number) => {
     setOpenSection(openSection === idx ? null : idx);
@@ -228,14 +237,11 @@ export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm 
   };
 
   const handleConfirm = () => {
-    setIsSuccess(true);
-    localStorage.setItem('baito_privacy_consent', 'true');
-    if (onConfirm) {
-      // Small delay so user sees success state briefly if needed, or just immediately call it
-      setTimeout(() => {
-        onConfirm();
-      }, 1500);
-    }
+    if (!allChecked || saveConsent.isPending) return;
+    // During signup, the server records acceptance atomically with the new
+    // account. Browsing a public policy never activates an account.
+    if (onConfirm) onConfirm();
+    else if (isLoggedIn) saveConsent.mutate();
   };
 
   return (
@@ -257,7 +263,20 @@ export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm 
 
       <main className="md:pt-8 flex-1 overflow-y-auto pt-4 pb-12 px-4 max-w-2xl mx-auto w-full">
         
-        {!isSuccess ? (
+        <h1 className="hidden md:block text-2xl font-bold mb-4">Maxfiylik siyosati</h1>
+        <p className="text-sm text-slate-600 mb-4">Siyosat versiyasi: {PRIVACY_POLICY_VERSION}</p>
+        {isCurrentConsent && receipt.data && (
+          <div role="status" className="rounded-xl bg-emerald-50 text-emerald-900 p-4 mb-4">
+            <p className="font-semibold">Rozilik saqlandi.</p>
+            <p>Sana: {formatLongDate(new Date(receipt.data.accepted_at), language)}</p>
+          </div>
+        )}
+        {(receipt.isError || saveConsent.isError) && (
+          <div role="alert" className="rounded-xl bg-red-50 text-red-800 p-4 mb-4">
+            Rozilikni yuklash yoki saqlash amalga oshmadi. Qayta urinib ko'ring.
+            {receipt.isError && <button type="button" onClick={() => receipt.refetch()} className="block min-h-11 underline">Qayta yuklash</button>}
+          </div>
+        )}
           <>
             <div className="bg-white border border-brand-outline-variant/40 rounded-xl p-4 mb-4 shadow-3xs">
               <div className="flex justify-between items-center mb-2">
@@ -276,6 +295,9 @@ export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm 
               {SECTIONS.map((sec, idx) => (
                 <div key={idx} className="bg-white border border-brand-outline-variant/40 rounded-xl overflow-hidden shadow-3xs">
                   <button 
+                    type="button"
+                    aria-expanded={openSection === idx}
+                    aria-controls={`privacy-section-${idx}`}
                     onClick={() => toggleSection(idx)}
                     className="w-full flex items-center p-3.5 hover:bg-slate-50 transition-colors text-left"
                   >
@@ -292,7 +314,7 @@ export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm 
                   </button>
                   
                   {openSection === idx && (
-                    <div className="p-4 border-t border-brand-outline-variant/30 bg-white">
+                    <div id={`privacy-section-${idx}`} className="p-4 border-t border-brand-outline-variant/30 bg-white">
                       {sec.content}
                     </div>
                   )}
@@ -300,7 +322,7 @@ export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm 
               ))}
             </div>
 
-            {allRead && (
+            {allRead && (onConfirm || isLoggedIn) && !isCurrentConsent && (
               <div className="bg-white border border-brand-outline-variant/40 rounded-xl overflow-hidden shadow-3xs mb-8" id="consent-wrap">
                 <div className="bg-brand-primary p-4 text-center">
                   <h2 className="text-[15px] font-bold text-white mb-0.5">Rozilik bildirish</h2>
@@ -320,15 +342,15 @@ export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm 
                       "18 yoshga to'lganligimni va O'zbekiston fuqarosi ekanligimni tasdiqlayman.",
                       "Platforma foydalanish shartlari (Terms of Service) bilan tanishganligimni va ularga roziligimni bildiraman."
                     ].map((text, i) => (
-                      <label key={i} className="flex items-start gap-3 cursor-pointer group">
+                      <label key={i} className="flex min-h-11 items-start gap-3 cursor-pointer group">
                         <div className="relative flex items-start pt-0.5">
                           <input 
                             type="checkbox" 
-                            className="hidden" 
+                            className="peer sr-only"
                             checked={!!consentChecks[`c${i}`]}
                             onChange={() => toggleCheck(`c${i}`)}
                           />
-                          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${consentChecks[`c${i}`] ? 'bg-brand-primary border-brand-primary text-white' : 'border-slate-300 bg-white group-hover:border-slate-400'}`}>
+                          <div aria-hidden="true" className={`w-5 h-5 rounded border flex items-center justify-center transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-brand-primary peer-focus-visible:ring-offset-2 ${consentChecks[`c${i}`] ? 'bg-brand-primary border-brand-primary text-white' : 'border-slate-300 bg-white group-hover:border-slate-400'}`}>
                             {consentChecks[`c${i}`] && <Check size={14} className="stroke-[3]" />}
                           </div>
                         </div>
@@ -340,37 +362,17 @@ export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm 
                   </div>
 
                   <button 
-                    disabled={!allChecked}
+                    type="button"
+                    disabled={!allChecked || saveConsent.isPending || (!onConfirm && receipt.isPending)}
                     onClick={handleConfirm}
                     className="w-full py-3.5 mt-4 bg-brand-primary text-white font-bold rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center justify-center gap-2"
                   >
-                    Roziman va davom etaman
+                    {saveConsent.isPending ? 'Saqlanmoqda...' : onConfirm ? 'Roziman va davom etaman' : 'Rozilikni saqlash'}
                   </button>
                 </div>
               </div>
             )}
           </>
-        ) : (
-          <div className="bg-white border border-brand-outline-variant/40 rounded-xl p-8 text-center shadow-3xs mt-10">
-            <div className="w-16 h-16 bg-[#EAF3DE] rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 size={32} className="text-[#27500A]" />
-            </div>
-            <h2 className="text-[20px] font-bold text-brand-text mb-2">Rozilik tasdiqlandi!</h2>
-            <p className="text-[14px] text-brand-text-variant mb-6 max-w-sm mx-auto">
-              Siz Baito maxfiylik siyosatini muvaffaqiyatli qabul qildingiz. Akkauntingiz to'liq faollashtirildi.
-            </p>
-            <p className="text-[12px] text-slate-400">
-              Tasdiqlangan sana: {formatLongDate(new Date(), language)}
-            </p>
-            <button 
-              type="button"
-              onClick={() => onBack ? onBack() : navigate(-1)}
-              className="mt-6 px-6 py-2.5 bg-slate-100 text-brand-text font-semibold rounded-lg hover:bg-slate-200 transition-colors"
-            >
-              Orqaga qaytish
-            </button>
-          </div>
-        )}
       </main>
     </div>
   );

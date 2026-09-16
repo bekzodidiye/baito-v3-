@@ -24,6 +24,6 @@ test.describe('Worker Flow', () => {
 
   test('a worker-only route is closed to a guest', async ({ page }) => {
     await page.goto('/applications');
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/login$/);
   });
 });

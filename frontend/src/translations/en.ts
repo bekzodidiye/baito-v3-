@@ -144,6 +144,7 @@ export const en = {
   jobNotSelected: "No job selected",
   selectJobDetails: "Select a job from the list to view detailed description.",
   jobsLoading: "Loading new jobs...",
+  mapLoading: "Map is loading...",
   noJobsInArea: "No jobs found in {location}",
   jobsFoundInArea: "Found {count} jobs in {location}",
   noJobsUzbekistan: "No jobs found in Uzbekistan",

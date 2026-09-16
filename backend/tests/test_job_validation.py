@@ -5,6 +5,7 @@ listing advertised a negative wage and hiring charged the employer 500,000.
 """
 
 from .conftest import login, make_job, make_user
+import pytest
 
 VALID = {
     "title": "Omborchi",
@@ -33,6 +34,16 @@ def test_negative_salary_is_rejected(client):
 def test_non_positive_salary_is_rejected(client):
     login(client, make_user(role="employer", phone="+998911112203"))
     assert _post(client, salary="0").status_code == 422
+
+
+@pytest.mark.parametrize("salary", ["", "   ", "0", "0 - 250000", "x" * 101])
+def test_create_and_update_both_reject_invalid_salary(client, salary):
+    employer = make_user(role="employer", phone="+998911119901")
+    job = make_job(employer.id)
+    login(client, employer)
+    assert _post(client, salary=salary).status_code == 422
+    assert client.put(f"/api/v1/jobs/{job.id}", json={"salary": salary}).status_code == 422
+    assert client.get(f"/api/v1/jobs/{job.id}").json()["salary"] == job.salary
 
 
 def test_negotiable_salary_is_still_allowed(client):
