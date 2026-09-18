@@ -206,6 +206,16 @@ export const uz = {
   goBack: "Orqaga",
   showAll: "Barchasini ko'rsatish",
 
+  // Help centre
+  helpContactSection: "Biz bilan bog'lanish",
+  helpByPhone: "Telefon orqali",
+  helpByEmail: "Elektron pochta",
+  helpLiveChat: "Jonli chat",
+  helpLiveChatDesc: "Operatorlar bilan suhbat",
+  helpResourcesSection: "Foydali manbalar",
+  helpFaqLink: "Ko'p so'raladigan savollar",
+  helpGuideLink: "Qo'llanma",
+  helpTermsLink: "Xizmat ko'rsatish shartlari",
   // Scattered controls and upload buttons
   reload: "Qayta yuklash",
   somethingWentWrong: "Nimadir xato ketdi",
