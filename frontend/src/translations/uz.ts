@@ -206,6 +206,13 @@ export const uz = {
   goBack: "Orqaga",
   showAll: "Barchasini ko'rsatish",
 
+  // Change password
+  changePasswordTitle: "Parolni o'zgartirish",
+  currentPassword: "Joriy parol",
+  newPassword: "Yangi parol",
+  confirmNewPassword: "Yangi parolni tasdiqlang",
+  cancel: "Bekor qilish",
+
   // Payment result
   paymentSuccessTitle: "To'lov muvaffaqiyatli!",
   paymentSuccessBody: "Hisobingiz muvaffaqiyatli to'ldirildi.",

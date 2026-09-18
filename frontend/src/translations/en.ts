@@ -206,6 +206,13 @@ export const en = {
   goBack: "Back",
   showAll: "Show All",
 
+  // Change password
+  changePasswordTitle: "Change password",
+  currentPassword: "Current password",
+  newPassword: "New password",
+  confirmNewPassword: "Confirm the new password",
+  cancel: "Cancel",
+
   // Payment result
   paymentSuccessTitle: "Payment successful",
   paymentSuccessBody: "Your balance has been topped up.",

@@ -206,6 +206,13 @@ export const ru = {
   goBack: "Назад",
   showAll: "Показать все",
 
+  // Change password
+  changePasswordTitle: "Смена пароля",
+  currentPassword: "Текущий пароль",
+  newPassword: "Новый пароль",
+  confirmNewPassword: "Подтвердите новый пароль",
+  cancel: "Отмена",
+
   // Payment result
   paymentSuccessTitle: "Оплата прошла успешно!",
   paymentSuccessBody: "Ваш счет успешно пополнен.",
