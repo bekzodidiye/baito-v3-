@@ -216,6 +216,12 @@ export const en = {
   helpFaqLink: "Frequently asked questions",
   helpGuideLink: "Guide",
   helpTermsLink: "Terms of service",
+  // Change password
+  changePasswordTitle: "Change password",
+  currentPassword: "Current password",
+  newPassword: "New password",
+  confirmNewPassword: "Confirm the new password",
+  cancel: "Cancel",
   // Scattered controls and upload buttons
   reload: "Reload",
   somethingWentWrong: "Something went wrong",

@@ -216,6 +216,12 @@ export const ru = {
   helpFaqLink: "Часто задаваемые вопросы",
   helpGuideLink: "Руководство",
   helpTermsLink: "Условия предоставления услуг",
+  // Change password
+  changePasswordTitle: "Смена пароля",
+  currentPassword: "Текущий пароль",
+  newPassword: "Новый пароль",
+  confirmNewPassword: "Подтвердите новый пароль",
+  cancel: "Отмена",
   // Scattered controls and upload buttons
   reload: "Перезагрузить",
   somethingWentWrong: "Что-то пошло не так",
