@@ -206,6 +206,16 @@ export const en = {
   goBack: "Back",
   showAll: "Show All",
 
+  // Help centre
+  helpContactSection: "Contact us",
+  helpByPhone: "By phone",
+  helpByEmail: "Email",
+  helpLiveChat: "Live chat",
+  helpLiveChatDesc: "Chat with an operator",
+  helpResourcesSection: "Useful resources",
+  helpFaqLink: "Frequently asked questions",
+  helpGuideLink: "Guide",
+  helpTermsLink: "Terms of service",
   // Change password
   changePasswordTitle: "Change password",
   currentPassword: "Current password",
