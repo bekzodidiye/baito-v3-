@@ -24,7 +24,7 @@ from .conftest import make_job, make_user
 
 MIGRATION = (
     pathlib.Path(__file__).resolve().parent.parent
-    / "alembic" / "versions" / "0018_refund_stranded_escrow_holds.py"
+    / "alembic" / "versions" / "0018_refund_held_escrow.py"
 )
 
 WAGE_TIYIN = 200_000 * 100
