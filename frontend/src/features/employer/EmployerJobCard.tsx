@@ -104,20 +104,6 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
         </div>
       </div>
 
-      {/* Tags */}
-      {(job.tags || []).length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4 pl-24">
-          {(job.tags || []).slice(0, 3).map((tag, idx) => (
-            <span
-              key={idx}
-              className="px-2 py-0.5 bg-slate-50 text-slate-600 text-[10px] font-bold rounded-md uppercase tracking-wide"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
       {/* Footer Actions */}
       <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-50">
         {/* Status Button / Pill */}
