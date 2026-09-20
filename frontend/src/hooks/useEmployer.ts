@@ -3,9 +3,11 @@ import { apiClient } from '../api/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showToast } from '../utils/toast';
 import { useAuthStore } from "../store/useAuthStore";
+import { translations } from '../translations';
 
 export const useEmployer = () => {
   const language = useAuthStore(s => s.language);
+  const t = translations[language];
     const userProfile = useAuthStore(s => s.userProfile);
   const queryClient = useQueryClient();
   
@@ -16,7 +18,7 @@ export const useEmployer = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const companyName = me?.companyName || me?.name || userProfile?.firstName || 'Ish beruvchi';
+  const companyName = me?.companyName || me?.name || userProfile?.firstName || t.roleEmployer;
   const balance = me?.balance || '0';
 
   // 2. Fetch Jobs (Strictly authenticated employer's own jobs)
@@ -56,10 +58,12 @@ export const useEmployer = () => {
         jobId: a.jobId,
         jobTitle: a.jobTitle,
         wageAmount: a.wageAmount ?? 0,
-        candidateName: a.workerName || 'Ishchi',
-        candidatePhone: a.workerPhone || '+998 90 987 65 43',
+        candidateName: a.workerName || t.roleWorker,
+        // A worker with no number on file used to be given a made-up one, which
+        // an employer could read as theirs and dial.
+        candidatePhone: a.workerPhone || '',
         candidateAvatar: a.workerAvatar || null,
-        candidateExperience: a.workerBio || 'Baito tasdiqlangan foydalanuvchisi',
+        candidateExperience: a.workerBio || t.verifiedUser,
         workerRating: a.workerRating,
         workerCompletedJobs: a.workerCompletedJobs,
         workerBirthDate: a.workerBirthDate,
@@ -105,9 +109,9 @@ export const useEmployer = () => {
         method: 'POST',
         body: JSON.stringify({
           title: (newJobData.title || '').trim(),
-          // Not an invented figure: the server reads "Ish beruvchi" as "no
-          // company given" and fills in the account's own name.
-          company: (newJobData.company || companyName || 'Ish beruvchi').trim(),
+          // Not an invented figure: the server reads this as "no company
+          // given" and fills in the account's own name.
+          company: (newJobData.company || companyName || t.roleEmployer).trim(),
           salary: newJobData.salary,
           location: newJobData.location,
           rawLocation: newJobData.rawLocation || newJobData.location,

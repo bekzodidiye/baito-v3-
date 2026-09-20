@@ -224,6 +224,7 @@ export const en = {
   cancel: "Cancel",
   // Scattered controls and upload buttons
   reload: "Reload",
+  photoSaved: "Photo saved!",
   somethingWentWrong: "Something went wrong",
   chatLoadFailed: "The chat failed to load. Please try again.",
   workTime24: "Working hours (24h)",
@@ -291,5 +292,21 @@ export const en = {
   paymentSuccessBody: "Your balance has been topped up.",
   paymentErrorTitle: "Payment failed",
   paymentErrorBody: "The payment did not go through. Please try again.",
-  paymentResultBack: "Go back"
+  paymentResultBack: "Go back",
+
+  badgeJob: "Job",
+  badgeApply: "Application",
+  badgeMessage: "Message",
+  badgeProfile: "Profile",
+  badgePayment: "Payment",
+  badgeSupport: "Support",
+  badgeSystem: "System",
+
+  roleWorker: "Worker",
+  roleEmployer: "Employer",
+  verifiedUser: "Baito verified user",
+  noPhoneOnFile: "No phone number on file",
+  unknownDevice: "Unknown device",
+  unknownIp: "Unknown IP",
+  activeNow: "Active now"
 };
