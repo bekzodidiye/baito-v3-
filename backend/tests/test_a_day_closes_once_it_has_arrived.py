@@ -102,3 +102,50 @@ def test_the_refusal_names_the_day(client):
     ).json()["detail"]
     assert _day(1) in detail
     assert "yakunlang" in detail
+
+
+def test_finishing_the_whole_posting_will_not_reach_a_future_day(client):
+    """The other button settles a day too, and used to take whichever was first.
+
+    With today's and yesterday's already closed, the only day left is
+    tomorrow's — and `/complete` picked `remaining[0]` whatever its date, so
+    the refusal on the per-day endpoint was reachable around.
+    """
+    _employer, worker, job = _running_three_day_job(client)
+    for offset in (-1, 0):
+        assert client.post(
+            f"/api/v1/jobs/{job.id}/days/{_day_id(job.id, _day(offset))}/complete"
+        ).status_code == 200
+    with SessionLocal() as db:
+        paid_so_far = db.query(User).filter(User.id == worker.id).first().balance
+
+    resp = client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5, "review": "yaxshi ishladi", "bonus": 0})
+
+    assert resp.status_code == 400
+    assert _day(1) in resp.json()["detail"]
+    assert _days(job.id)[_day(1)] == JobDayStatus.PENDING
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == worker.id).first().balance == paid_so_far
+
+
+def test_finishing_the_whole_posting_still_settles_a_day_that_has_arrived(client):
+    _employer, worker, job = _running_three_day_job(client)
+
+    resp = client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5, "review": "yaxshi ishladi", "bonus": 0})
+
+    assert resp.status_code == 200, resp.text
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == worker.id).first().balance == WAGE
+
+
+def test_an_administrator_can_finish_a_posting_whose_days_are_all_ahead(client):
+    _employer, _worker, job = _running_three_day_job(client)
+    for offset in (-1, 0):
+        client.post(f"/api/v1/jobs/{job.id}/days/{_day_id(job.id, _day(offset))}/complete")
+    admin = make_user(role="admin", phone=_phone())
+    login(client, admin)
+
+    resp = client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5, "review": "yaxshi ishladi", "bonus": 0})
+
+    assert resp.status_code == 200, resp.text
+    assert _days(job.id)[_day(1)] == JobDayStatus.COMPLETED

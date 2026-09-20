@@ -597,10 +597,23 @@ def complete_job(
     
     if remaining:
         original_remaining_count = len(remaining)
-        today_str = now.strftime("%Y-%m-%d")
-        
-        # Complete the day corresponding to today, or fallback to the first uncompleted day
-        first_day = next((d for d in remaining if d.workDate == today_str), remaining[0])
+        today_str = _today_in_tashkent()
+
+        # Today's day, or the oldest one still owed. The fallback used to be
+        # `remaining[0]` whatever its date, so pressing "finish" on a posting
+        # whose only open day is still ahead closed and paid that day — the
+        # same thing the per-day endpoint refuses, reached by the other button.
+        arrived = [d for d in remaining if str(d.workDate) <= today_str]
+        if not arrived and current_user.role != 'admin':
+            soonest = min(str(d.workDate) for d in remaining)
+            raise HTTPException(
+                status_code=400,
+                detail=f"{soonest} hali kelmadi — o'sha kuni yakunlang",
+            )
+        first_day = next(
+            (d for d in remaining if str(d.workDate) == today_str),
+            (arrived or remaining)[0],
+        )
         
         first_day.status = JobDayStatus.COMPLETED
         first_day.completedAt = now
