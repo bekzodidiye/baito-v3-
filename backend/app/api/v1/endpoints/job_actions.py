@@ -1,6 +1,6 @@
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -17,6 +17,16 @@ from app.models.job_day import JobDay, JobDayStatus
 from app.services.work_dates import get_job_dates_set  # noqa: F401  (re-exported)
 ACTIVE_APP_STATUSES = ['applied', 'hired', 'confirmed', 'in_progress', 'start_requested']
 COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
+
+# Uzbekistan is UTC+5 and keeps no daylight saving, so a fixed offset is the
+# whole of it. Asking UTC what day it is would call the first five hours of
+# every Tashkent morning "yesterday", and a shift starting at 06:00 could not
+# be closed until 05:00 UTC.
+TASHKENT = timezone(timedelta(hours=5))
+
+
+def _today_in_tashkent() -> str:
+    return datetime.now(TASHKENT).strftime("%Y-%m-%d")
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -421,6 +431,17 @@ def complete_job_day(
         raise HTTPException(status_code=400, detail="Bu kun allaqachon yakunlangan")
     if day.status == JobDayStatus.CANCELLED:
         raise HTTPException(status_code=400, detail="Bu kun bekor qilingan")
+
+    # A day closes once it has arrived, not before. Nothing stopped an employer
+    # closing every day of a five-day posting on the first morning, paying the
+    # worker in full for four shifts nobody had worked yet — and a paid day
+    # cannot be reopened. An administrator can still close one early, which is
+    # the point of the override above.
+    if current_user.role != 'admin' and str(day.workDate) > _today_in_tashkent():
+        raise HTTPException(
+            status_code=400,
+            detail=f"{day.workDate} hali kelmadi — o'sha kuni yakunlang",
+        )
 
     apps = (
         db.query(models.Application)
