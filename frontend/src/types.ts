@@ -5,10 +5,15 @@ export interface Job {
   logoUrl?: string;
   imageUrl?: string;
   salary: string;
+  salaryCurrency?: string;
   tags: string[];
   location: string;
   rawLocation?: string;
   coordinates: { x: number; y: number }; // Percentage coordinate on custom map (0-100)
+  coordinateX?: number;
+  coordinateY?: number;
+  latitude?: number;
+  longitude?: number;
   time: string;
   urgent: boolean;
   applied: boolean;
@@ -27,6 +32,9 @@ export interface Job {
   category?: string;
   hiredCount?: number;
   vacancies?: number;
+  isCluster?: boolean;
+  count?: number;
+  pinIds?: string[];
   /* Invoice state, sent only on the employer's own listing (/jobs/my).
      undefined means no invoice has been raised for this job - which the card
      has to tell apart from an invoice raised and not yet paid. Values match
