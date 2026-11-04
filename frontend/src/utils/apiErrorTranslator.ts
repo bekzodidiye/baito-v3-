@@ -47,6 +47,9 @@ const EXACT: Record<string, { ru: string; en: string }> = {
   'Bu e\'lonni o\'chirish huquqingiz yo\'q': { ru: 'У вас нет прав удалить это объявление', en: 'You do not have permission to delete this posting' },
   'Bu e\'lonni tahrirlash huquqingiz yo\'q': { ru: 'У вас нет прав редактировать это объявление', en: 'You do not have permission to edit this posting' },
   'Bu xabarni o\'chirish huquqingiz yo\'q': { ru: 'У вас нет прав удалить это сообщение', en: 'You do not have permission to delete this message' },
+  'Chipta yaratishda xatolik yuz berdi': { ru: 'Ошибка при создании тикета', en: 'Failed to create connection ticket' },
+  'Xarita ma\'lumotlarini yuklashda kutilmagan xatolik yuz berdi': { ru: 'Непредвиденная ошибка при загрузке данных карты', en: 'Unexpected error loading map data' },
+  'Xarita ma\'lumotlarini yuklashda xatolik yuz berdi': { ru: 'Ошибка при загрузке данных карты', en: 'Failed to load map data' },
   'Bu email allaqachon ro\'yxatdan o\'tgan': { ru: 'Этот email уже зарегистрирован', en: 'That email is already registered' },
   'Bu faylni ko\'rish huquqingiz yo\'q': { ru: 'У вас нет прав просматривать этот файл', en: 'You do not have permission to view this file' },
   'Bu foydalanuvchi ishchi emas': { ru: 'Этот пользователь не работник', en: 'This user is not a worker' },
@@ -166,6 +169,7 @@ const EXACT: Record<string, { ru: string; en: string }> = {
   'Yangi parol eskisidan farq qilishi kerak': { ru: 'Новый пароль должен отличаться от старого', en: 'The new password must differ from the old one' },
   'Yechish so\'rovi topilmadi': { ru: 'Запрос на вывод не найден', en: 'Withdrawal request not found' },
   'Yollangan ishchini rad etib bo\'lmaydi, avval ishni bekor qiling': { ru: 'Нанятого работника нельзя отклонить — сначала отмените работу', en: 'A hired worker cannot be rejected; cancel the job first' },
+  'Zoom darajasi (z) 0 va 20 oralig\'ida bo\'lishi kerak': { ru: 'Уровень масштабирования (z) должен быть от 0 до 20', en: 'Zoom level (z) must be between 0 and 20' },
 };
 
 /** The details the server builds with a value in them. The `{}` stands where
@@ -177,6 +181,7 @@ const TEMPLATED: { re: RegExp; ru: string; en: string }[] = [
   { re: /^Bu\ so'rov\ allaqachon\ ko'rib\ chiqilgan\ \(holat:\ (.+?)\)$/, ru: 'Этот запрос уже рассмотрен (статус: $1)', en: 'This request has already been handled (status: $1)' },
   { re: /^Ko'pi\ bilan\ (.+?)\ ta\ karta\ qo'shish\ mumkin$/, ru: 'Можно добавить не более $1 карт', en: 'At most $1 cards can be added' },
   { re: /^Noma'lum\ holat\.\ Ruxsat\ etilgan:\ (.+?)$/, ru: 'Неизвестный статус. Допустимые: $1', en: 'Unknown status. Allowed: $1' },
+  { re: /^Noto'g'ri\ tile\ koordinatalari:\ z=(.+?)\ uchun\ x\ va\ y\ \[0,\ (.+?)\]\ oralig'ida\ bo'lishi\ kerak$/, ru: 'Неверные координаты тайла: для z=$1 значения x и y должны быть в диапазоне [0, $2]', en: 'Invalid tile coordinates: for z=$1, x and y must be within [0, $2]' },
   { re: /^Ushbu\ kategoriyada\ (.+?)\ ta\ faol\ ish\ e'loni\ mavjud,\ uni\ o'chirib\ bo'lmaydi$/, ru: 'В этой категории есть $1 активных объявлений, её нельзя удалить', en: 'There are $1 active job postings in this category, it cannot be deleted' },
 ];
 

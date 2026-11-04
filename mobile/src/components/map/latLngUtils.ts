@@ -6,7 +6,22 @@ import { areDistrictNamesEqual } from './districtUtils';
 const latLngCache = new Map<string, { lat: number; lng: number }>();
 
 export const getLatLng = (job: Job, districtsGeoJson?: any) => {
-  const cacheKey = `${job.id}_${districtsGeoJson ? '1' : '0'}`;
+  const anyJob = job as any;
+  const coordX = anyJob.coordinateX ?? anyJob.latitude;
+  const coordY = anyJob.coordinateY ?? anyJob.longitude;
+
+  // When backend coordinates are present and valid, return them directly to avoid stale cache on updates
+  if (
+    typeof coordX === 'number' &&
+    typeof coordY === 'number' &&
+    coordX !== 0 &&
+    coordY !== 0 &&
+    isInsideUzbekistan(coordX, coordY)
+  ) {
+    return { lat: coordX, lng: coordY };
+  }
+
+  const cacheKey = `${job.id}_${job.rawLocation || job.location || ''}_${districtsGeoJson ? '1' : '0'}`;
   if (latLngCache.has(cacheKey)) {
     return latLngCache.get(cacheKey)!;
   }
@@ -18,7 +33,22 @@ export const getLatLng = (job: Job, districtsGeoJson?: any) => {
   return result;
 };
 
+export const isInsideUzbekistan = (lat: number, lng: number): boolean => {
+  return lat >= 37.0 && lat <= 45.8 && lng >= 55.9 && lng <= 73.5;
+};
+
 const calculateLatLng = (job: Job, districtsGeoJson?: any) => {
+  const anyJob = job as any;
+  if (
+    typeof anyJob.coordinateX === 'number' &&
+    typeof anyJob.coordinateY === 'number' &&
+    anyJob.coordinateX !== 0 &&
+    anyJob.coordinateY !== 0 &&
+    isInsideUzbekistan(anyJob.coordinateX, anyJob.coordinateY)
+  ) {
+    return { lat: anyJob.coordinateX, lng: anyJob.coordinateY };
+  }
+
   const x = job.coordinates ? job.coordinates.x : 50;
   const y = job.coordinates ? job.coordinates.y : 50;
 
