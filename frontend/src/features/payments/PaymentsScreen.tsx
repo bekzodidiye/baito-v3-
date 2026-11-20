@@ -461,11 +461,6 @@ export const PaymentsScreen: React.FC = () => {
         currentBalance={currentBalance} 
         savedCards={savedCards}
       />
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}} />
     </div>
   );
 };
